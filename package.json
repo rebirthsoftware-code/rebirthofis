@@ -1,0 +1,27 @@
+{
+  "name": "rebirthofis",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Rebirth Ofis - yapay zeka çalışanlarından oluşan sanal yazılım ofisi",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,magenta \"npm run dev -w apps/server\" \"npm run dev -w apps/web\"",
+    "dev:mock": "OFFICE_MOCK=1 npm run dev",
+    "build": "npm run build -w apps/web",
+    "start": "npm run start -w apps/server",
+    "typecheck": "npm run typecheck -w apps/server && npm run typecheck -w apps/web",
+    "demo": "tsx apps/server/src/demo.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
