@@ -96,3 +96,7 @@ apps/web          Vite + React izometrik ofis arayüzü
 - Görev geçmişi için gerçek veritabanı
 - Çalışan başına model/efor seçimi ve maliyet paneli
 - Çok kullanıcılı erişim ve yetkilendirme
+
+## Telefondan kullanım (Artifact sürümü)
+
+`artifact/rebirth-ofis.html` tek dosyalık, sunucusuz sürümdür. Claude içinde artifact olarak yayınlandığında çalışanlar Claude'u doğrudan sayfadan çağırır (`sample` yeteneği, kullanıcının kendi Claude hakkından harcanır), görevler artifact veritabanında saklanır (`db`). Claude dışında açılırsa simülasyon moduna düşer.

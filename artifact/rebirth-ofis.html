@@ -1,0 +1,849 @@
+<title>Rebirth Ofis</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+  /* Layout: koyu zemin üzerinde izometrik ofis sahnesi; yanında (telefonda altında) görev paneli. */
+  :root {
+    --bg: #0b0b10;
+    --bg-2: #13131a;
+    --panel: #15151d;
+    --panel-2: #1d1d27;
+    --line: rgba(255,255,255,.09);
+    --fg: #f4f4f5;
+    --muted: #a1a1aa;
+    --accent: #f5a524;
+    --accent-ink: #1a1203;
+    --ok: #22c55e;
+    --info: #60a5fa;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-head: "Space Grotesk", "Inter", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: radial-gradient(1100px 600px at 25% 15%, #171722 0%, var(--bg) 60%);
+    color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+  }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  .app { min-height: 100%; display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 900px) {
+    .app { height: 100%; grid-template-columns: minmax(0, 1fr) 400px; }
+    .panel { height: 100%; overflow-y: auto; border-left: 1px solid var(--line); border-top: none !important; }
+  }
+
+  /* Sahne */
+  .stage {
+    position: relative; display: flex; flex-direction: column; min-width: 0;
+    padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    min-height: 54vh;
+  }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+  .eyebrow { font-size: 10px; letter-spacing: 3px; color: var(--muted); font-weight: 600; }
+  h1 { margin: 0; font-family: var(--font-head); font-size: 22px; letter-spacing: .3px; line-height: 1.1; }
+  .stats { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .stat, .badge { font-size: 11px; padding: 4px 9px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .badge.live { color: #86efac; border-color: rgba(34,197,94,.45); }
+  .badge.mock { color: var(--warn); border-color: rgba(251,191,36,.45); }
+  .badge.wait { color: var(--muted); }
+  .office-wrap { flex: 1; min-height: 0; display: flex; }
+  .office { flex: 1; width: 100%; min-height: 300px; height: 100%; display: block; }
+  @media (max-width: 899px) {
+    /* Telefonda ofis kaydırılarak gezilir: dar ekrana sığdırmak yerine okunur boyutta tutulur */
+    .office-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))) calc(-1 * max(16px, env(safe-area-inset-right, 0px))); }
+    .office { min-width: 760px; height: 46vh; min-height: 320px; }
+  }
+  .emp-card {
+    position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: 14px; width: 320px; max-width: calc(100% - 32px);
+    background: rgba(21,21,29,.96); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 13px;
+    backdrop-filter: blur(8px); z-index: 2;
+  }
+  .emp-card .head { display: flex; gap: 10px; align-items: center; }
+  .emp-card .head > div { flex: 1; min-width: 0; }
+  .emp-card .swatch { width: 10px; height: 28px; border-radius: 4px; flex: none; }
+  .emp-card p { margin: 8px 0; }
+  .x { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 0 4px; }
+
+  /* Panel */
+  .panel {
+    background: var(--panel); border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 18px;
+    padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  h2 { font-size: 11px; margin: 0 0 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .form { display: flex; flex-direction: column; gap: 8px; }
+  input[type=text], textarea, select {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; color: var(--fg);
+  }
+  textarea { resize: vertical; min-height: 96px; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { background: transparent; border: 1px dashed var(--line); color: var(--muted); border-radius: 999px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+  .chip:hover { color: var(--fg); border-color: var(--muted); }
+  .primary { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+  .primary:disabled { opacity: .5; cursor: not-allowed; }
+  .ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
+  .ghost:hover { color: var(--fg); }
+  .tier { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  .tier select { width: auto; padding: 6px 28px 6px 10px; font-size: 12px; }
+  .note { font-size: 12px; color: var(--muted); }
+  .error { color: #fecaca; font-size: 12px; background: rgba(248,113,113,.12); border-radius: 6px; padding: 8px 10px; }
+
+  .tasks ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .tasks li { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+  .tasks li:hover { background: var(--panel-2); }
+  .tasks li.active { background: var(--panel-2); border-color: var(--line); }
+  .tasks .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .status { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; text-transform: uppercase; letter-spacing: .5px; }
+  .status.planning { color: var(--warn); border-color: rgba(251,191,36,.5); }
+  .status.running, .status.collecting { color: #86efac; border-color: rgba(34,197,94,.5); }
+  .status.done { color: #93c5fd; border-color: rgba(96,165,250,.5); }
+  .status.failed { color: #fca5a5; border-color: rgba(248,113,113,.5); }
+
+  .detail { border-top: 1px solid var(--line); padding-top: 14px; }
+  .detail .head { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+  .detail h3 { margin: 0; font-family: var(--font-head); font-size: 16px; text-wrap: balance; }
+  .brief { color: var(--muted); font-size: 13px; white-space: pre-wrap; margin: 8px 0; }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+  .tabs button { background: none; border: none; color: var(--muted); padding: 8px 10px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tabs button.on { color: var(--fg); border-bottom-color: var(--accent); }
+  .tabs button:disabled { opacity: .4; cursor: default; }
+  .step { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 6px; background: var(--panel-2); font-size: 13px; }
+  .step summary { display: grid; grid-template-columns: auto auto minmax(0,1fr) auto; gap: 8px; align-items: center; padding: 8px 10px; cursor: pointer; list-style: none; }
+  .step summary::-webkit-details-marker { display: none; }
+  .phase { font-size: 10px; background: #2a2a36; color: var(--muted); padding: 2px 6px; border-radius: 4px; }
+  .who { color: var(--accent); font-weight: 600; white-space: nowrap; font-size: 12px; }
+  .what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pill { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: #2a2a36; color: var(--muted); }
+  .pill.running { background: rgba(34,197,94,.15); color: #86efac; }
+  .pill.done { background: rgba(96,165,250,.15); color: #93c5fd; }
+  .pill.failed { background: rgba(248,113,113,.15); color: #fca5a5; }
+  .instruction { padding: 0 10px 10px; color: var(--muted); font-size: 12px; }
+  .log { list-style: none; padding: 0; margin: 0; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .log li { display: flex; gap: 8px; align-items: baseline; }
+  .md { font-size: 13px; line-height: 1.55; padding: 0 10px 10px; min-width: 0; overflow-wrap: anywhere; }
+  .md.report { padding: 0; }
+  .md h1, .md h2, .md h3 { color: var(--fg); text-transform: none; letter-spacing: 0; margin: 14px 0 6px; font-family: var(--font-head); }
+  .md h1 { font-size: 18px; } .md h2 { font-size: 16px; } .md h3 { font-size: 14px; }
+  .md pre { background: #0b0b10; border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow-x: auto; font-size: 12px; }
+  .md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .md table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; }
+  .md th, .md td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+  .md.stream::after { content: "▍"; color: var(--accent); animation: blink 1s infinite; }
+  .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+  /* Ofis animasyonları */
+  .emp .body { transform-box: fill-box; transform-origin: 50% 100%; }
+  .emp.working .body, .emp.planning .body, .emp.collecting .body { animation: bob .9s ease-in-out infinite; }
+  .emp.reviewing .body { animation: sway 2.4s ease-in-out infinite; }
+  .pulse { animation: pulse 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .dots circle { animation: blink 1.2s infinite; }
+  .dots circle:nth-child(2) { animation-delay: .2s; }
+  .dots circle:nth-child(3) { animation-delay: .4s; }
+  .screen-on { animation: flicker 2.2s ease-in-out infinite; }
+  .zz { animation: float 2s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+  @keyframes sway { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+  @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.4); } }
+  @keyframes blink { 0%,80%,100% { opacity: .2; } 40% { opacity: 1; } }
+  @keyframes flicker { 0%,100% { opacity: .9; } 50% { opacity: .7; } }
+  @keyframes float { 0%,100% { transform: translateY(0); opacity: .7; } 50% { transform: translateY(-4px); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+
+<div class="app">
+  <main class="stage">
+    <div class="top">
+      <div>
+        <div class="eyebrow">YAPAY ZEKA YAZILIM OFİSİ</div>
+        <h1>Rebirth Ofis</h1>
+      </div>
+      <div class="stats">
+        <span class="badge wait" id="modeBadge">Bağlanıyor…</span>
+        <span class="stat" id="statEmp">15 çalışan</span>
+        <span class="stat" id="statActive">0 aktif</span>
+        <span class="stat" id="statOpen">0 açık görev</span>
+      </div>
+    </div>
+    <div class="office-wrap" id="officeWrap"><svg class="office" id="office" role="img" aria-label="İzometrik ofis görünümü"></svg></div>
+    <aside class="emp-card" id="empCard" hidden></aside>
+  </main>
+
+  <section class="panel">
+    <form class="form" id="newTask">
+      <h2>Yeni görev ver</h2>
+      <input type="text" id="title" placeholder="Başlık (örn. Berber randevu uygulaması)" maxlength="200" required>
+      <textarea id="brief" placeholder="Ne istediğini ekibe anlatır gibi yaz. Genel Müdür işi bölüp doğru çalışanlara dağıtacak." required></textarea>
+      <div class="chips" id="examples"></div>
+      <div class="row">
+        <label class="tier">Derinlik
+          <select id="tier">
+            <option value="quick">Hızlı</option>
+            <option value="default" selected>Dengeli</option>
+            <option value="complex">Derin</option>
+          </select>
+        </label>
+        <button type="submit" class="primary" id="send">Ofise gönder</button>
+      </div>
+      <div class="note" id="costNote">Her görev, kendi Claude kullanım hakkından harcanır: 1 plan + çalışan sayısı kadar çalışma + 1 rapor çağrısı.</div>
+      <div class="error" id="formError" hidden></div>
+    </form>
+
+    <div class="tasks">
+      <h2>Görevler</h2>
+      <div class="note" id="tasksEmpty">Henüz görev yok. Yukarıdan ilk işi ver; ofis canlanacak.</div>
+      <ul id="taskList"></ul>
+    </div>
+
+    <div class="detail" id="detail" hidden></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.7/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  /* ============ KADRO ============ */
+  const OFFICE_NAME = "Rebirth Ofis";
+  const RULES = `
+Kurallar:
+- Türkçe yaz. Teknik terimleri olduğu gibi bırakabilirsin.
+- Çıktını Markdown olarak ver; başlık, madde ve gerekiyorsa kod blokları kullan.
+- Sana verilen görev tanımının dışına çıkma; varsayımlarını açıkça yaz.
+- Belirsizlik varsa en makul kararı ver ve gerekçesini tek cümleyle belirt.
+- Gerçek dünyada doğrulanmamış bir şeyi kesin gibi sunma.`;
+
+  const DEPARTMENTS = [
+    { id: "yonetim", name: "Yönetim", color: "#f59e0b", x: 0, y: 0, w: 4, h: 2 },
+    { id: "urun", name: "Ürün ve Tasarım", color: "#ec4899", x: 4, y: 0, w: 3, h: 2 },
+    { id: "devops", name: "DevOps ve Altyapı", color: "#06b6d4", x: 7, y: 0, w: 3, h: 2 },
+    { id: "gelistirme", name: "Yazılım Geliştirme", color: "#22c55e", x: 0, y: 2, w: 4, h: 3 },
+    { id: "kalite", name: "Kalite ve Güvenlik", color: "#8b5cf6", x: 4, y: 2, w: 3, h: 3 },
+    { id: "pazarlama", name: "Pazarlama ve Müşteri", color: "#3b82f6", x: 7, y: 2, w: 3, h: 3 },
+    { id: "finans", name: "Finans", color: "#eab308", x: 0, y: 5, w: 3, h: 2 },
+    { id: "yedek", name: "Yedek", color: "#94a3b8", x: 3, y: 5, w: 2, h: 2 },
+    { id: "dinlenme", name: "Dinlenme Alanı", color: "#64748b", x: 5, y: 5, w: 5, h: 2, kind: "rest" },
+  ];
+
+  const EMPLOYEES = [
+    { id: "genel-mudur", name: "Genel Müdür", role: "Genel Müdür", dept: "yonetim", manager: true, desk: [0.8, 0.9],
+      skills: "Görevleri parçalar, doğru çalışana dağıtır, sonuçları birleştirir.",
+      prompt: `Sen "${OFFICE_NAME}" adlı yazılım ofisinin Genel Müdürüsün. Gelen her işi ekibe dağıtılabilir somut adımlara bölersin, her adımı en uygun çalışana verirsin ve ekibin çıktılarından tek bir yönetici raporu çıkarırsın. Küçük işler için 1-2 çalışan yeterlidir; büyük işlerde fazları kullanarak bağımlı adımları sıralar, bağımsız adımları aynı fazda paralel yürütürsün.${RULES}` },
+    { id: "proje-yoneticisi", name: "Proje Yöneticisi", role: "Proje Yöneticisi", dept: "yonetim", desk: [2.6, 0.9],
+      skills: "Kapsam, zaman planı, risk listesi, sprint ve görev kırılımı hazırlar.",
+      prompt: `Sen deneyimli bir yazılım Proje Yöneticisisin. Kapsam belirleme, iş kırılımı, sprint planı, risk analizi ve kabul kriterleri konusunda uzmansın. Çıktıların tablo ve madde ağırlıklı, uygulanabilir ve ölçülebilir olur.${RULES}` },
+    { id: "urun-analisti", name: "Ürün Analisti", role: "Ürün Analisti", dept: "urun", desk: [0.8, 0.9],
+      skills: "Gereksinim analizi, kullanıcı hikâyeleri, kabul kriterleri, rakip incelemesi.",
+      prompt: `Sen bir Ürün Analistisin. İş fikrini kullanıcı hikâyelerine, kabul kriterlerine ve önceliklendirilmiş gereksinim listesine dönüştürürsün. Kullanıcı sorununu ve değer önerisini net yazarsın.${RULES}` },
+    { id: "uiux", name: "UI/UX Tasarımcı", role: "UI/UX Tasarımcı", dept: "urun", desk: [2.2, 0.9],
+      skills: "Ekran akışları, bilgi mimarisi, bileşen listesi, erişilebilirlik.",
+      prompt: `Sen bir UI/UX Tasarımcısısın. Ekran akışlarını, sayfa yapılarını, bileşen listelerini ve etkileşim kurallarını metinle ve gerekirse ASCII wireframe ile anlatırsın. Erişilebilirlik ve mobil uyumu gözetirsin.${RULES}` },
+    { id: "devops", name: "DevOps Mühendisi", role: "DevOps Mühendisi", dept: "devops", desk: [0.8, 0.9],
+      skills: "CI/CD, Docker, bulut altyapısı, izleme, dağıtım stratejileri.",
+      prompt: `Sen bir DevOps Mühendisisin. CI/CD hatları, Dockerfile ve compose dosyaları, bulut mimarisi, izleme ve dağıtım stratejileri üretirsin. Çalıştırılabilir yapılandırma dosyaları ve komutlar verirsin.${RULES}` },
+    { id: "veri", name: "Veri Mühendisi", role: "Veri Mühendisi", dept: "devops", desk: [2.2, 0.9],
+      skills: "Veritabanı şeması, SQL, veri modelleme, raporlama sorguları.",
+      prompt: `Sen bir Veri Mühendisisin. Veri modelleri, veritabanı şemaları (DDL), indeks stratejileri ve raporlama sorguları yazarsın. Performans ve veri bütünlüğünü önceliklendirirsin.${RULES}` },
+    { id: "backend", name: "Backend Geliştirici", role: "Backend Geliştirici", dept: "gelistirme", desk: [0.8, 0.9],
+      skills: "API tasarımı, Node.js/TypeScript, Python, veritabanı erişimi, kimlik doğrulama.",
+      prompt: `Sen kıdemli bir Backend Geliştiricisin. REST/GraphQL API tasarımı, servis mimarisi, kimlik doğrulama, veri erişim katmanı ve hata yönetimi konusunda uzmansın. Çalışır, tipli ve test edilebilir kod yazarsın; aksi belirtilmedikçe TypeScript kullanırsın.${RULES}` },
+    { id: "frontend", name: "Frontend Geliştirici", role: "Frontend Geliştirici", dept: "gelistirme", desk: [2.2, 0.9],
+      skills: "React/TypeScript, bileşen mimarisi, durum yönetimi, performans, CSS.",
+      prompt: `Sen kıdemli bir Frontend Geliştiricisin. React + TypeScript ile bileşen mimarisi kurar, durum yönetimi, form doğrulama, erişilebilirlik ve performans optimizasyonu yaparsın. Çalışır kod örnekleri verirsin.${RULES}` },
+    { id: "mobil", name: "Mobil Geliştirici", role: "Mobil Geliştirici", dept: "gelistirme", desk: [1.5, 2.2],
+      skills: "React Native / Flutter, mağaza yayın süreci, bildirimler, çevrimdışı çalışma.",
+      prompt: `Sen bir Mobil Geliştiricisin. React Native ve Flutter ile iOS/Android uygulamaları geliştirir, mağaza yayın süreçlerini, bildirimleri ve çevrimdışı senaryoları bilirsin.${RULES}` },
+    { id: "qa", name: "QA Test Mühendisi", role: "QA Test Mühendisi", dept: "kalite", desk: [0.8, 0.9],
+      skills: "Test planı, test senaryoları, otomasyon (Playwright/Vitest), hata raporu.",
+      prompt: `Sen bir QA Test Mühendisisin. Test stratejisi, kabul testleri, uç durum listesi ve otomasyon kodu (Vitest, Playwright) üretirsin. Her gereksinim için en az bir doğrulama yolu yazarsın.${RULES}` },
+    { id: "guvenlik", name: "Güvenlik Analisti", role: "Güvenlik Analisti", dept: "kalite", desk: [1.5, 2.2],
+      skills: "Tehdit modelleme, OWASP, kimlik ve erişim, KVKK uyumu.",
+      prompt: `Sen bir Uygulama Güvenliği Analistisin. Tehdit modelleri çıkarır, OWASP Top 10 ve KVKK/GDPR açısından riskleri listeler, savunma önerileri ve güvenli kod örnekleri verirsin. Saldırı aracı değil, savunma önerisi üretirsin.${RULES}` },
+    { id: "icerik", name: "İçerik Yazarı", role: "İçerik Yazarı", dept: "pazarlama", desk: [0.8, 0.9],
+      skills: "Ürün metni, tanıtım sayfası, sosyal medya, blog ve e-posta metinleri.",
+      prompt: `Sen bir İçerik Yazarı ve pazarlama uzmanısın. Ürün tanıtım metinleri, açılış sayfası içerikleri, sosyal medya paylaşımları ve kullanıcı e-postaları yazarsın. Hedef kitleye göre ton ayarlarsın, abartıdan kaçınırsın.${RULES}` },
+    { id: "musteri", name: "Müşteri Temsilcisi", role: "Müşteri Temsilcisi", dept: "pazarlama", desk: [1.5, 2.2],
+      skills: "SSS, destek yanıt şablonları, kullanıcı geri bildirimi analizi, onboarding.",
+      prompt: `Sen bir Müşteri Başarı Temsilcisisin. SSS, destek yanıt şablonları, onboarding akışları ve kullanıcı geri bildirimi özetleri hazırlarsın. Empatik, net ve çözüm odaklı yazarsın.${RULES}` },
+    { id: "muhasebeci", name: "Muhasebeci", role: "Muhasebeci", dept: "finans", desk: [1.5, 0.9],
+      skills: "Maliyet tahmini, fiyatlandırma, bütçe, altyapı ve API giderleri.",
+      prompt: `Sen bir Finans ve Maliyet Uzmanısın. Yazılım projeleri için maliyet tahmini, fiyatlandırma modelleri, bütçe tabloları ve altyapı/API gider analizi hazırlarsın. Rakamları varsayımlarıyla birlikte tablo olarak verirsin; güncel fiyatları tahmini olarak işaretlersin.${RULES}` },
+    { id: "yedek", name: "Yedek Çalışan", role: "Genel Uzman", dept: "yedek", desk: [1, 0.9],
+      skills: "Diğer rollere uymayan her tür araştırma, özet, çeviri ve genel iş.",
+      prompt: `Sen ofisin çok yönlü Yedek Çalışanısın. Başka hiçbir uzmana tam uymayan işleri alırsın: araştırma özeti, çeviri, doküman düzenleme, karşılaştırma tabloları ve genel analiz.${RULES}` },
+  ];
+  const EMP = Object.fromEntries(EMPLOYEES.map((e) => [e.id, e]));
+  const DEPT = Object.fromEntries(DEPARTMENTS.map((d) => [d.id, d]));
+  const MANAGER = EMPLOYEES.find((e) => e.manager);
+
+  const STATUS_LABEL = { idle: "Boşta", planning: "Görevi planlıyor", working: "Çalışıyor", reviewing: "Ekibi takip ediyor", collecting: "Sonucu topluyor", resting: "Dinleniyor" };
+  const TASK_LABEL = { queued: "Sırada", planning: "Planlanıyor", running: "Çalışılıyor", collecting: "Rapor hazırlanıyor", done: "Tamamlandı", failed: "Başarısız" };
+  const STATUS_COLOR = { idle: "#9ca3af", planning: "#f59e0b", working: "#22c55e", reviewing: "#3b82f6", collecting: "#a855f7", resting: "#64748b" };
+
+  const EXAMPLES = [
+    { title: "Berber randevu uygulaması", brief: "Berberler için online randevu alma web uygulaması. Müşteri kaydı, takvim, SMS hatırlatma ve kartla ödeme olsun. Güvenlik, test planı ve ilk 3 aylık maliyet tahmini de istiyorum." },
+    { title: "SaaS açılış sayfası", brief: "Küçük işletmeler için stok takip SaaS ürünümüzün açılış sayfası: değer önerisi, fiyatlandırma bölümü, SSS ve React ile bileşen yapısı. Pazarlama metinleri Türkçe olsun." },
+    { title: "Giriş ve yetkilendirme", brief: "Mevcut Node.js API'mize e-posta/şifre + Google ile giriş, rol tabanlı yetkilendirme ve KVKK uyumlu oturum yönetimi ekle. Test senaryoları ve güvenlik incelemesi dahil." },
+  ];
+
+  /* ============ DURUM ============ */
+  const state = {
+    mode: "wait", // live | mock | wait
+    states: Object.fromEntries(EMPLOYEES.map((e) => [e.id, { status: "idle", note: STATUS_LABEL.idle, at: Date.now() }])),
+    tasks: new Map(),
+    selectedEmp: null,
+    selectedTask: null,
+    tab: "plan",
+    canWrite: true,
+  };
+  const activeLocal = new Set(); // bu sekmede yürüyen görevler
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const now = () => new Date().toISOString();
+  const fmtTime = (iso) => new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  const uid = () => "t_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+  /* ============ KALICILIK ============ */
+  let db = null;
+  const saveChains = new Map();
+  const LS_KEY = "rebirth-ofis-tasks";
+
+  function slimTask(t) {
+    const cap = (s, n) => (s && s.length > n ? s.slice(0, n) + "\n\n…(kısaltıldı)" : s);
+    return {
+      id: t.id, title: t.title, brief: t.brief, status: t.status, createdAt: t.createdAt, updatedAt: t.updatedAt,
+      plan: t.plan || null, report: cap(t.report, 60000) || null, error: t.error || null, tier: t.tier,
+      results: (t.results || []).map((r) => ({ ...r, output: cap(r.output, 24000) || null })),
+      log: (t.log || []).slice(-80),
+    };
+  }
+  function persist(task) {
+    task.updatedAt = now();
+    if (db && state.canWrite) {
+      const prev = saveChains.get(task.id) || Promise.resolve();
+      const next = prev.then(() => db.doc("tasks/" + task.id).set(slimTask(task))).catch((e) => {
+        if (e && e.code === "invalid_argument") state.canWrite = false;
+        console.warn("db yazılamadı", e);
+      });
+      saveChains.set(task.id, next);
+    } else {
+      try {
+        const all = [...state.tasks.values()].map(slimTask).slice(0, 50);
+        localStorage.setItem(LS_KEY, JSON.stringify(all));
+      } catch { /* yoksay */ }
+    }
+  }
+  async function removeTask(id) {
+    state.tasks.delete(id);
+    if (state.selectedTask === id) state.selectedTask = null;
+    if (db && state.canWrite) { try { await db.doc("tasks/" + id).delete(); } catch (e) { console.warn(e); } }
+    else { try { localStorage.setItem(LS_KEY, JSON.stringify([...state.tasks.values()].map(slimTask))); } catch { /* yoksay */ } }
+    render();
+  }
+  function ingestStored(list) {
+    for (const t of list) {
+      if (!t || !t.id) continue;
+      if (activeLocal.has(t.id)) continue; // bu sekmede yürüyen görev yetkilidir
+      if (!["done", "failed"].includes(t.status)) { t.status = "failed"; t.error = t.error || "Sayfa kapandığı için görev yarıda kaldı."; }
+      t.results = t.results || []; t.log = t.log || [];
+      state.tasks.set(t.id, t);
+    }
+  }
+
+  /* ============ ARKA UÇ: CANLI (sample) / SİMÜLASYON ============ */
+  let sample = null;
+
+  const live = {
+    async plan(prompt, tier) {
+      return sample.json(prompt, { modelTier: tier, cache: false });
+    },
+    async complete(prompt, tier, onText) {
+      const { text, truncated } = await sample(prompt, { modelTier: tier, cache: false, onText: ({ text }) => onText && onText(text) });
+      return truncated ? text + "\n\n> Not: Yanıt uzunluk sınırına takıldı." : text;
+    },
+  };
+
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms + Math.random() * ms * 0.5));
+  const mock = {
+    async plan(prompt) {
+      await wait(1200);
+      const t = prompt.toLowerCase();
+      const picks = new Set();
+      const rules = [
+        [/api|backend|sunucu|veritaban|auth|giriş|kayıt/, "backend"], [/arayüz|ekran|react|web|frontend|site|sayfa|panel/, "frontend"],
+        [/mobil|ios|android|uygulama/, "mobil"], [/tasar|ux|ui|akış/, "uiux"], [/test|kalite|hata/, "qa"],
+        [/güvenlik|kvkk|şifre|yetki/, "guvenlik"], [/deploy|docker|ci|yayın|altyapı|bulut/, "devops"],
+        [/veri|rapor|sql|şema|tablo/, "veri"], [/pazarlama|tanıtım|metin|blog|sosyal/, "icerik"],
+        [/müşteri|destek|sss|onboarding/, "musteri"], [/maliyet|fiyat|bütçe|gelir/, "muhasebeci"], [/plan|sprint|zaman|takvim|kapsam/, "proje-yoneticisi"],
+      ];
+      for (const [re, id] of rules) if (re.test(t)) picks.add(id);
+      if (!picks.size) ["urun-analisti", "backend", "frontend"].forEach((x) => picks.add(x));
+      const ids = [...picks].slice(0, 5);
+      return { summary: "Simülasyon planı: görev anahtar kelimelere göre ekibe dağıtıldı.", steps: ids.map((employeeId, i) => ({ employeeId, title: EMP[employeeId].role + " çalışması", instruction: "Görev kapsamında " + EMP[employeeId].skills.toLowerCase() + " alanında katkı ver.", phase: i < 2 ? 1 : 2 })) };
+    },
+    async complete(prompt, _tier, onText) {
+      await wait(1800);
+      const isReport = prompt.includes("## Rapor formatı");
+      const text = isReport
+        ? "## Yönetici Raporu (simülasyon)\n\nBu rapor sahte modda üretildi. Sayfayı Claude içinde açıp Claude kullanımına izin verince gerçek çalışanlar devreye girer.\n\n### Ekip çıktıları\n" + prompt.split("\n").filter((l) => l.startsWith("### ") && l.includes(" - ")).map((l) => "- " + l.slice(4)).join("\n") + "\n\n### Sonraki adımlar\n1. Claude erişimine izin ver\n2. Görevi yeniden gönder"
+        : "### Çalışma özeti (simülasyon)\n\n- Talimat alındı ve incelendi.\n- Bu alanda örnek bir çıktı üretildi.\n- Gerçek modda burada ayrıntılı analiz, kod ve öneriler yer alır.";
+      onText && onText(text);
+      return text;
+    },
+  };
+  const backend = () => (state.mode === "live" ? live : mock);
+
+  /* ============ İSTEMLER ============ */
+  const roster = () => EMPLOYEES.filter((e) => !e.manager).map((e) => `- id: ${e.id} | ${e.name} (${e.role}) | ${e.skills}`).join("\n");
+
+  const planPrompt = (task) => `${MANAGER.prompt}
+
+Yeni bir iş geldi. Bunu ekibe dağıtılacak adımlara böl.
+
+## İş
+Başlık: ${task.title}
+Açıklama:
+${task.brief}
+
+## Kadro (yalnızca bu id'leri kullan)
+${roster()}
+
+## Kurallar
+- En az 1, en fazla 6 adım. İş küçükse az adım kullan.
+- Her adım tek bir çalışana atanır.
+- "phase": bağımsız adımlar aynı fazda (paralel), önceki çıktıya ihtiyaç duyanlar sonraki fazda. Fazlar 1'den başlar.
+- "instruction": çalışanın bağlamı bilmeden de işi yapabileceği kadar ayrıntılı talimat.
+
+Yalnızca şu şekilde bir JSON nesnesi döndür, başka metin yazma:
+{"summary": "1-2 cümlelik özet", "steps": [{"employeeId": "backend", "title": "Kısa başlık", "instruction": "Ayrıntılı talimat", "phase": 1}]}`;
+
+  const stepPrompt = (task, step, prior) => `${EMP[step.employeeId].prompt}
+
+## Genel iş
+Başlık: ${task.title}
+Açıklama:
+${task.brief}
+
+## Senin adımın: ${step.title}
+${step.instruction}
+
+## Ekip arkadaşlarının önceki çıktıları
+${prior.length ? prior.map((p) => `### ${EMP[p.step.employeeId].name} - ${p.step.title}\n${p.output}`).join("\n\n") : "(henüz başka çıktı yok)"}
+
+Şimdi kendi adımını tamamla. Yalnızca kendi sorumluluğundaki çıktıyı üret; önceki çıktıları tekrar etme, gerekirse onlara atıf yap.`;
+
+  const reportPrompt = (task, plan, outputs) => `${MANAGER.prompt}
+
+Ekip işi tamamladı. Aşağıdaki çıktılardan iş sahibine sunulacak tek bir yönetici raporu hazırla.
+
+## İş
+Başlık: ${task.title}
+Açıklama:
+${task.brief}
+
+## Plan özeti
+${plan.summary}
+
+## Ekip çıktıları
+${outputs.map((p) => `### ${EMP[p.step.employeeId].name} - ${p.step.title}\n${p.output}`).join("\n\n")}
+
+## Rapor formatı
+1. **Özet** (3-5 cümle)
+2. **Teslim edilenler** (her çalışanın katkısı, kısa)
+3. **Birleştirilmiş sonuç**: çelişen yerleri uzlaştır, kritik kod ve yapılandırmaları koru
+4. **Riskler ve açık sorular**
+5. **Sonraki adımlar**
+
+Ekip çıktılarının tamamını kopyalama; iş sahibinin karar vermesi için gerekli olanı aktar.`;
+
+  function normalizePlan(input) {
+    if (!input || !Array.isArray(input.steps) || !input.steps.length) throw new Error("Plan boş geldi");
+    const steps = input.steps.slice(0, 6).map((s, i) => {
+      let id = String(s.employeeId || "");
+      if (!EMP[id] || EMP[id].manager) {
+        const byName = EMPLOYEES.find((e) => !e.manager && (e.name.toLowerCase() === id.toLowerCase() || e.role.toLowerCase() === id.toLowerCase()));
+        id = byName ? byName.id : "yedek";
+      }
+      return { id: "s" + (i + 1), employeeId: id, title: String(s.title || "Adım " + (i + 1)).trim(), instruction: String(s.instruction || ""), phase: Math.max(1, Math.round(Number(s.phase) || 1)) };
+    });
+    const uniq = [...new Set(steps.map((s) => s.phase))].sort((a, b) => a - b);
+    for (const s of steps) s.phase = uniq.indexOf(s.phase) + 1;
+    return { summary: String(input.summary || ""), steps };
+  }
+
+  /* ============ ORKESTRATÖR ============ */
+  const queue = [];
+  let running = false;
+
+  function setEmp(id, status, note, taskId) {
+    state.states[id] = { status, note: note || STATUS_LABEL[status], taskId, at: Date.now() };
+    renderOffice();
+    if (state.selectedEmp === id) renderEmpCard();
+  }
+  function log(task, message, employeeId) {
+    task.log.push({ at: now(), employeeId, message });
+    if (task.log.length > 120) task.log.shift();
+    persist(task); renderTasks();
+  }
+  function setTask(task, patch) { Object.assign(task, patch); persist(task); renderTasks(); }
+
+  function enqueue(task) { queue.push(task.id); pump(); }
+  async function pump() {
+    if (running) return;
+    running = true;
+    try { while (queue.length) await runTask(queue.shift()).catch((e) => console.error(e)); }
+    finally { running = false; }
+  }
+
+  function errText(e) {
+    if (!e) return "Bilinmeyen hata";
+    if (e.code) {
+      const map = {
+        not_granted: "Claude kullanımına izin verilmedi. Sayfanın izinlerinden Claude'a izin verip tekrar dene.",
+        rate_limited: e.reason === "usage_limit" ? "Claude kullanım sınırına ulaştın. Biraz sonra tekrar dene." : "Çok fazla istek gitti. Biraz bekleyip tekrar dene.",
+        refused: "Claude bu isteği reddetti. Görev tanımını değiştirip tekrar dene.",
+        invalid_json: "Plan okunamadı. Görevi yeniden gönder.",
+        prompt_too_large: "Görev metni çok uzun. Kısaltıp tekrar dene.",
+        session_expired: "Oturum süresi doldu. Sayfayı yenileyip tekrar giriş yap.",
+        sampling_disabled: "Bu hesapta Claude kullanılamıyor.",
+        cancelled: "İptal edildi.",
+        empty_completion: "Claude boş yanıt verdi. Görevi sadeleştirip tekrar dene.",
+      };
+      return map[e.code] || ("Geçici bir hata oluştu (" + e.code + "). Tekrar dene.");
+    }
+    return e.message || String(e);
+  }
+
+  async function runTask(taskId) {
+    const task = state.tasks.get(taskId);
+    if (!task) return;
+    activeLocal.add(taskId);
+    const be = backend();
+    const tier = task.tier || "default";
+    try {
+      setTask(task, { status: "planning" });
+      setEmp(MANAGER.id, "planning", "Görevi planlıyor", taskId);
+      log(task, `Görev alındı: "${task.title}"`, MANAGER.id);
+
+      const plan = normalizePlan(await be.plan(planPrompt(task), tier));
+      setTask(task, { plan, status: "running", results: plan.steps.map((s) => ({ stepId: s.id, employeeId: s.employeeId, status: "pending" })) });
+      log(task, `Plan hazır: ${plan.steps.length} adım, ${new Set(plan.steps.map((s) => s.phase)).size} faz. ${plan.summary}`, MANAGER.id);
+      setEmp(MANAGER.id, "reviewing", "Ekibi takip ediyor", taskId);
+
+      const phases = [...new Set(plan.steps.map((s) => s.phase))].sort((a, b) => a - b);
+      const outputs = [];
+      for (const phase of phases) {
+        const steps = plan.steps.filter((s) => s.phase === phase);
+        log(task, `Faz ${phase} başladı: ${steps.map((s) => EMP[s.employeeId].name).join(", ")}`);
+        await Promise.all(steps.map(async (step) => {
+          const emp = EMP[step.employeeId];
+          const res = task.results.find((r) => r.stepId === step.id);
+          Object.assign(res, { status: "running", startedAt: now() });
+          setEmp(emp.id, "working", "Düşünüyor…", taskId);
+          log(task, `${step.title} üzerinde çalışıyor`, emp.id);
+          let lastPaint = 0;
+          try {
+            const output = await be.complete(stepPrompt(task, step, outputs), tier, (text) => {
+              res.output = text;
+              if (state.states[emp.id].note !== step.title) setEmp(emp.id, "working", step.title, taskId);
+              const t = Date.now();
+              if (t - lastPaint > 400) { lastPaint = t; renderDetail(); }
+            });
+            outputs.push({ step, output });
+            Object.assign(res, { status: "done", output, finishedAt: now() });
+            setEmp(emp.id, "idle", "Sonucu teslim etti");
+            log(task, `${step.title} tamamlandı`, emp.id);
+          } catch (e) {
+            const msg = errText(e);
+            Object.assign(res, { status: "failed", output: (e && e.text ? e.text + "\n\n" : "") + "Hata: " + msg, finishedAt: now() });
+            outputs.push({ step, output: `(Bu adım başarısız oldu: ${msg})` });
+            setEmp(emp.id, "idle", "Hata bildirdi");
+            log(task, `${step.title} başarısız: ${msg}`, emp.id);
+            if (e && ["not_granted", "sampling_disabled", "session_expired", "rate_limited"].includes(e.code)) throw e;
+          }
+        }));
+      }
+
+      setTask(task, { status: "collecting" });
+      setEmp(MANAGER.id, "collecting", "Sonucu topluyor", taskId);
+      let lastPaint = 0;
+      const report = await be.complete(reportPrompt(task, plan, outputs), tier, (text) => {
+        task.report = text;
+        const t = Date.now();
+        if (t - lastPaint > 400) { lastPaint = t; renderDetail(); }
+      });
+      setTask(task, { status: "done", report });
+      setEmp(MANAGER.id, "idle", "Raporu teslim etti");
+      log(task, "Yönetici raporu hazır", MANAGER.id);
+      if (state.selectedTask === task.id) { state.tab = "report"; renderDetail(); }
+    } catch (e) {
+      const msg = errText(e);
+      setTask(task, { status: "failed", error: msg });
+      setEmp(MANAGER.id, "idle", "Görev başarısız");
+      log(task, `Görev başarısız: ${msg}`, MANAGER.id);
+      for (const id of Object.keys(state.states)) if (state.states[id].taskId === taskId && state.states[id].status !== "idle") setEmp(id, "idle");
+    } finally {
+      activeLocal.delete(taskId);
+      renderDetail();
+    }
+  }
+
+  // Uzun süre boşta kalanlar yatakhaneye geçer (görsel tat)
+  setInterval(() => {
+    const BEDS = 5;
+    let resting = Object.values(state.states).filter((s) => s.status === "resting").length;
+    for (const [id, s] of Object.entries(state.states)) {
+      if (resting >= BEDS) break;
+      if (s.status === "idle" && Date.now() - s.at > 5 * 60000) { setEmp(id, "resting"); resting++; }
+    }
+  }, 30000);
+
+  /* ============ İZOMETRİK OFİS ============ */
+  const T = 72, WALL = 46, COS = 0.866;
+  const iso = (x, y, z = 0) => ({ x: (x - y) * T * COS, y: (x + y) * T * 0.5 - z });
+  const pts = (arr) => arr.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
+  const rectPoly = (x, y, w, h, z = 0) => pts([iso(x, y, z), iso(x + w, y, z), iso(x + w, y + h, z), iso(x, y + h, z)]);
+  const line = (a, b, stroke, w = 1) => `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${stroke}" stroke-width="${w}"/>`;
+  const wall = (a, b, fill) => `<polygon points="${pts([a, b, { x: b.x, y: b.y - WALL }, { x: a.x, y: a.y - WALL }])}" fill="${fill}" stroke="rgba(10,10,12,.85)" stroke-width="1.4" stroke-linejoin="round"/>` + line({ x: a.x, y: a.y - WALL }, { x: b.x, y: b.y - WALL }, "#0a0a0c", 2.2);
+  const BED_COLORS = ["#c4a7d9", "#9fc5e8", "#d9b38c", "#f4a7b9", "#a8d8b9"];
+
+  function deskSvg(x, y, active, color) {
+    const H = 22, w = 1, h = 0.5, x0 = x - w / 2, y0 = y - h / 2, m = iso(x, y - 0.05, H);
+    return `<g>
+      <polygon points="${pts([iso(x0, y0 + h), iso(x0 + w, y0 + h), iso(x0 + w, y0 + h, H), iso(x0, y0 + h, H)])}" fill="#8f867d"/>
+      <polygon points="${pts([iso(x0 + w, y0), iso(x0 + w, y0 + h), iso(x0 + w, y0 + h, H), iso(x0 + w, y0, H)])}" fill="#a89f95"/>
+      <polygon points="${rectPoly(x0, y0, w, h, H)}" fill="#d6cfc6" stroke="#6b645d" stroke-width=".6"/>
+      <g transform="translate(${m.x},${m.y})">
+        <rect x="-1.5" y="-6" width="3" height="6" fill="#1f1f23"/>
+        <rect x="-11" y="-20" width="22" height="14" rx="1.5" fill="#15151a" stroke="#2b2b31"/>
+        <rect x="-9.5" y="-18.5" width="19" height="11" rx="1" fill="${active ? color : "#2a2f3a"}" ${active ? 'class="screen-on" filter="url(#glow)" opacity=".9"' : ""}/>
+      </g></g>`;
+  }
+  function plantSvg(x, y) {
+    const p = iso(x, y);
+    return `<g transform="translate(${p.x},${p.y})" pointer-events="none"><ellipse rx="7" ry="3.5" fill="rgba(0,0,0,.25)"/><rect x="-5" y="-9" width="10" height="9" rx="2" fill="#b5651d"/><circle cy="-15" r="8" fill="#2f855a"/><circle cx="-5" cy="-11" r="6" fill="#38a169"/><circle cx="5" cy="-12" r="6" fill="#276749"/></g>`;
+  }
+  function bedSvg(x, y, i) {
+    const w = 0.6, h = 1.25, H = 12, x0 = x - w / 2, y0 = y - 0.25;
+    return `<g><polygon points="${pts([iso(x0, y0 + h), iso(x0 + w, y0 + h), iso(x0 + w, y0 + h, H), iso(x0, y0 + h, H)])}" fill="#7c6f64"/>
+      <polygon points="${pts([iso(x0 + w, y0), iso(x0 + w, y0 + h), iso(x0 + w, y0 + h, H), iso(x0 + w, y0, H)])}" fill="#9a8c7f"/>
+      <polygon points="${rectPoly(x0, y0, w, h, H)}" fill="${BED_COLORS[i % BED_COLORS.length]}" stroke="#5c524a" stroke-width=".6"/>
+      <polygon points="${rectPoly(x0 + 0.08, y0 + 0.08, w - 0.16, 0.28, H + 1)}" fill="#fff" opacity=".9"/></g>`;
+  }
+  function personSvg(e, s, color, x, y, layer) {
+    const p = iso(x, y), status = s.status, busy = !["idle", "resting"].includes(status), selected = state.selectedEmp === e.id;
+    const tagW = e.name.length * 6 + 24, note = s.note || "", bubbleW = Math.min(170, note.length * 5.6 + 30);
+    let inner = "";
+    if (layer === "body") {
+      inner += `<ellipse cy="1" rx="11" ry="4.5" fill="rgba(0,0,0,.35)"/>`;
+      if (selected) inner += `<ellipse cy="1" rx="15" ry="6.5" fill="none" stroke="#fbbf24" stroke-width="2"/>`;
+      inner += status === "resting"
+        ? `<g><rect x="-10" y="-10" width="20" height="9" rx="4" fill="${color}"/><circle cx="13" cy="-7" r="6" fill="#f1c9a5"/><text x="16" y="-18" font-size="9" fill="#e5e7eb" class="zz">zZ</text></g>`
+        : `<g class="body"><rect x="-7" y="-26" width="14" height="20" rx="5" fill="${color}"/><rect x="-7" y="-13" width="6" height="13" rx="2" fill="#1f2937"/><rect x="1" y="-13" width="6" height="13" rx="2" fill="#1f2937"/><circle cy="-33" r="7.5" fill="#f1c9a5"/><path d="M-7.5 -35 a7.5 7.5 0 0 1 15 0 v-1 a7.5 5 0 0 0 -15 0z" fill="#2b1d14"/>${e.manager ? '<rect x="-2" y="-24" width="4" height="10" fill="#111" rx="1"/>' : ""}</g>`;
+    } else {
+      inner += `<g transform="translate(0,-50)"><rect x="${-tagW / 2}" y="-8" width="${tagW}" height="16" rx="8" fill="rgba(18,18,22,.9)" stroke="rgba(255,255,255,.08)"/><circle cx="${-tagW / 2 + 9}" r="3.2" fill="${STATUS_COLOR[status]}" ${busy ? 'class="pulse"' : ""}/><text x="4" y="3.5" text-anchor="middle" fill="#fafaf9" font-size="9.5" font-weight="600">${esc(e.name)}</text></g>`;
+      if (busy) inner += `<g transform="translate(0,-76)"><path d="M-5 9 L0 15 L5 9 Z" fill="#fff"/><rect x="${-bubbleW / 2}" y="-10" width="${bubbleW}" height="20" rx="6" fill="#fff"/><text x="-6" y="3.5" text-anchor="middle" fill="#18181b" font-size="9">${esc(note.length > 28 ? note.slice(0, 27) + "…" : note)}</text><g transform="translate(${bubbleW / 2 - 14},0)" class="dots"><circle r="1.6" fill="#18181b"/><circle cx="4.5" r="1.6" fill="#18181b"/><circle cx="9" r="1.6" fill="#18181b"/></g></g>`;
+    }
+    return `<g class="emp ${status}" data-emp="${e.id}" transform="translate(${p.x},${p.y})" style="cursor:pointer">${inner}</g>`;
+  }
+
+  function renderOffice() {
+    const gridW = Math.max(...DEPARTMENTS.map((d) => d.x + d.w)), gridH = Math.max(...DEPARTMENTS.map((d) => d.y + d.h));
+    const rest = DEPARTMENTS.find((d) => d.kind === "rest");
+    const beds = Array.from({ length: 5 }, (_, i) => ({ x: rest.x + 0.55 + i * 0.85, y: rest.y + 0.6 }));
+    const resting = EMPLOYEES.filter((e) => state.states[e.id].status === "resting");
+    const items = [], tags = [];
+    for (const e of EMPLOYEES) {
+      const d = DEPT[e.dept], s = state.states[e.id];
+      const dx = d.x + e.desk[0], dy = d.y + e.desk[1];
+      const bi = resting.indexOf(e), bed = bi >= 0 ? beds[bi] : null;
+      items.push({ depth: dx + dy, svg: deskSvg(dx, dy, !["idle", "resting"].includes(s.status), d.color) });
+      const px = bed ? bed.x : dx, py = bed ? bed.y + 0.5 : dy + 0.62;
+      items.push({ depth: px + py + 0.01, svg: personSvg(e, s, d.color, px, py, "body") });
+      tags.push(personSvg(e, s, d.color, px, py, "tags"));
+    }
+    beds.forEach((b, i) => items.push({ depth: b.x + b.y - 0.3, svg: bedSvg(b.x, b.y, i) }));
+    items.sort((a, b) => a.depth - b.depth);
+
+    const m = 0.7;
+    const minX = iso(-m, gridH + m).x - 40, maxX = iso(gridW + m, -m).x + 40, minY = -WALL - 60, maxY = iso(gridW + m, gridH + m).y + 60;
+    let out = `<defs><linearGradient id="floor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ece9e4"/><stop offset="1" stop-color="#d9d4cc"/></linearGradient><linearGradient id="lawn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4d7c4a"/><stop offset="1" stop-color="#36613a"/></linearGradient><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+    out += `<polygon points="${rectPoly(-m, -m, gridW + 2 * m, gridH + 2 * m)}" fill="url(#lawn)"/><polygon points="${rectPoly(-0.25, -0.25, gridW + 0.5, gridH + 0.5)}" fill="#b9b3aa"/>`;
+    for (const d of DEPARTMENTS) {
+      out += `<polygon points="${rectPoly(d.x, d.y, d.w, d.h)}" fill="${d.kind === "rest" ? "#cbbfae" : "url(#floor)"}" stroke="#8f8a83" stroke-width=".8"/>`;
+      for (let i = 1; i < d.w; i++) out += line(iso(d.x + i, d.y), iso(d.x + i, d.y + d.h), "rgba(0,0,0,.08)");
+      for (let i = 1; i < d.h; i++) out += line(iso(d.x, d.y + i), iso(d.x + d.w, d.y + i), "rgba(0,0,0,.08)");
+      out += `<polyline points="${pts([iso(d.x, d.y + d.h), iso(d.x + d.w, d.y + d.h), iso(d.x + d.w, d.y)])}" fill="none" stroke="${d.color}" stroke-width="3" opacity=".9"/>`;
+    }
+    for (const d of DEPARTMENTS) if (d.kind !== "rest") out += wall(iso(d.x, d.y), iso(d.x + d.w, d.y), "rgba(255,255,255,.10)") + wall(iso(d.x, d.y), iso(d.x, d.y + d.h), "rgba(255,255,255,.07)");
+    for (const d of DEPARTMENTS) if (d.kind !== "rest") out += plantSvg(d.x + d.w - 0.3, d.y + 0.3);
+    out += items.map((i) => i.svg).join("");
+    out += `<g pointer-events="none">` + DEPARTMENTS.filter((d) => d.kind !== "rest").map((d) => wall(iso(d.x, d.y + d.h), iso(d.x + d.w, d.y + d.h), "rgba(255,255,255,.035)") + wall(iso(d.x + d.w, d.y), iso(d.x + d.w, d.y + d.h), "rgba(255,255,255,.035)")).join("") + `</g>`;
+    out += tags.join("");
+    for (const d of DEPARTMENTS) {
+      const p = iso(d.x + d.w / 2, d.y + d.h), w = d.name.length * 6.4 + 26;
+      out += `<g transform="translate(${p.x - w / 2},${p.y + 11})" pointer-events="none"><rect y="-9" width="${w}" height="18" rx="4" fill="rgba(18,18,22,.92)" stroke="rgba(255,255,255,.12)"/><rect x="6" y="-4" width="8" height="8" rx="2" fill="${d.color}"/><text x="19" y="4" fill="#f5f5f4" font-size="10.5" font-weight="600" letter-spacing=".5">${esc(d.name.toLocaleUpperCase("tr"))}</text></g>`;
+    }
+    const svg = $("office");
+    svg.setAttribute("viewBox", `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svg.innerHTML = out;
+    const active = Object.values(state.states).filter((s) => !["idle", "resting"].includes(s.status)).length;
+    $("statActive").textContent = active + " aktif";
+  }
+
+  function renderEmpCard() {
+    const el = $("empCard");
+    const e = EMP[state.selectedEmp];
+    if (!e) { el.hidden = true; return; }
+    const d = DEPT[e.dept], s = state.states[e.id];
+    el.hidden = false;
+    el.innerHTML = `<div class="head"><span class="swatch" style="background:${d.color}"></span><div><strong>${esc(e.name)}</strong><div class="note">${esc(e.role)} · ${esc(d.name)}</div></div><button class="x" id="empClose" aria-label="Kapat">×</button></div><p>${esc(e.skills)}</p><div class="note">Durum: <b>${esc(STATUS_LABEL[s.status])}</b>${s.note && s.note !== STATUS_LABEL[s.status] ? " · " + esc(s.note) : ""}</div>`;
+    $("empClose").onclick = () => { state.selectedEmp = null; renderEmpCard(); renderOffice(); };
+  }
+
+  /* ============ PANEL ============ */
+  const md = (text) => {
+    if (!text) return "";
+    try {
+      if (window.marked && window.DOMPurify) return DOMPurify.sanitize(marked.parse(text, { async: false }));
+    } catch { /* düş */ }
+    return `<pre style="white-space:pre-wrap">${esc(text)}</pre>`;
+  };
+  const sortedTasks = () => [...state.tasks.values()].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
+  function renderTasks() {
+    const list = sortedTasks();
+    $("tasksEmpty").hidden = list.length > 0;
+    $("taskList").innerHTML = list.map((t) => `<li class="${t.id === state.selectedTask ? "active" : ""}" data-task="${t.id}"><span class="status ${t.status}">${TASK_LABEL[t.status] || t.status}</span><span class="title">${esc(t.title)}</span><span class="time">${t.createdAt ? fmtTime(t.createdAt) : ""}</span></li>`).join("");
+    $("statOpen").textContent = list.filter((t) => !["done", "failed"].includes(t.status)).length + " açık görev";
+    renderDetail();
+  }
+
+  function renderDetail() {
+    const el = $("detail");
+    const t = state.tasks.get(state.selectedTask) || sortedTasks()[0];
+    if (!t) { el.hidden = true; return; }
+    if (state.selectedTask !== t.id) { state.selectedTask = t.id; }
+    el.hidden = false;
+    const tab = state.tab;
+    const streaming = !["done", "failed"].includes(t.status);
+    let body = "";
+    if (tab === "plan") {
+      body += t.plan ? `<p class="note">${esc(t.plan.summary)}</p>` : `<div class="note">Genel Müdür planı hazırlıyor…</div>`;
+      for (const s of t.plan ? t.plan.steps : []) {
+        const r = (t.results || []).find((x) => x.stepId === s.id) || { status: "pending" };
+        const lbl = { running: "çalışıyor", done: "bitti", failed: "hata" }[r.status] || "bekliyor";
+        body += `<details class="step ${r.status}" ${r.status === "running" ? "open" : ""}><summary><span class="phase">F${s.phase}</span><span class="who">${esc(EMP[s.employeeId]?.name || s.employeeId)}</span><span class="what">${esc(s.title)}</span><span class="pill ${r.status}">${lbl}</span></summary><div class="instruction"><b>Talimat:</b> ${esc(s.instruction)}</div>${r.output ? `<div class="md ${r.status === "running" ? "stream" : ""}">${md(r.output)}</div>` : ""}</details>`;
+      }
+    } else if (tab === "log") {
+      body += `<ul class="log">${(t.log || []).map((l) => `<li><span class="time">${new Date(l.at).toLocaleTimeString("tr-TR")}</span>${l.employeeId ? `<span class="who">${esc(EMP[l.employeeId]?.name || "")}</span>` : ""}<span>${esc(l.message)}</span></li>`).join("")}</ul>`;
+    } else {
+      if (t.error) body += `<div class="error">${esc(t.error)}</div>`;
+      body += `<div class="md report ${t.status === "collecting" ? "stream" : ""}">${md(t.report)}</div>`;
+    }
+    const canRetry = ["done", "failed"].includes(t.status);
+    el.innerHTML = `<div class="head"><h3>${esc(t.title)}</h3><span class="status ${t.status}">${TASK_LABEL[t.status] || t.status}</span></div>
+      <p class="brief">${esc(t.brief)}</p>
+      <div class="tabs"><button data-tab="plan" class="${tab === "plan" ? "on" : ""}">Plan${t.plan ? ` (${t.plan.steps.length})` : ""}</button><button data-tab="log" class="${tab === "log" ? "on" : ""}">Akış (${(t.log || []).length})</button><button data-tab="report" class="${tab === "report" ? "on" : ""}" ${t.report || t.error ? "" : "disabled"}>Rapor</button></div>
+      <div id="tabBody">${body}</div>
+      ${canRetry ? `<div class="actions"><button class="ghost" data-act="retry">Yeniden çalıştır</button><button class="ghost" data-act="delete">Sil</button></div>` : ""}`;
+    el.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { state.tab = b.dataset.tab; renderDetail(); }));
+    el.querySelectorAll("[data-act]").forEach((b) => (b.onclick = () => {
+      if (b.dataset.act === "delete") { b.textContent = "Siliniyor…"; removeTask(t.id); }
+      else createTask(t.title, t.brief, t.tier);
+    }));
+    void streaming;
+  }
+
+  function render() { renderOffice(); renderTasks(); renderEmpCard(); }
+
+  /* ============ GÖREV OLUŞTURMA ============ */
+  function createTask(title, brief, tier) {
+    const task = { id: uid(), title, brief, status: "queued", createdAt: now(), updatedAt: now(), tier: tier || $("tier").value, results: [], log: [], plan: null, report: null, error: null };
+    state.tasks.set(task.id, task);
+    state.selectedTask = task.id; state.tab = "plan";
+    persist(task); renderTasks();
+    enqueue(task);
+    return task;
+  }
+
+  $("examples").innerHTML = EXAMPLES.map((ex, i) => `<button type="button" class="chip" data-ex="${i}">${esc(ex.title)}</button>`).join("");
+  $("examples").querySelectorAll("[data-ex]").forEach((b) => (b.onclick = () => { const ex = EXAMPLES[+b.dataset.ex]; $("title").value = ex.title; $("brief").value = ex.brief; }));
+  $("newTask").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const title = $("title").value.trim(), brief = $("brief").value.trim();
+    const err = $("formError");
+    if (!title || !brief) { err.hidden = false; err.textContent = "Başlık ve açıklama gerekli."; return; }
+    if (brief.length > 20000) { err.hidden = false; err.textContent = "Açıklama çok uzun."; return; }
+    err.hidden = true;
+    createTask(title, brief);
+    $("title").value = ""; $("brief").value = "";
+  });
+  $("taskList").addEventListener("click", (ev) => {
+    const li = ev.target.closest("[data-task]");
+    if (!li) return;
+    state.selectedTask = li.dataset.task;
+    const t = state.tasks.get(li.dataset.task);
+    state.tab = t && t.report ? "report" : "plan";
+    renderTasks();
+  });
+  $("office").addEventListener("click", (ev) => {
+    const g = ev.target.closest("[data-emp]");
+    if (!g) return;
+    state.selectedEmp = state.selectedEmp === g.dataset.emp ? null : g.dataset.emp;
+    renderOffice(); renderEmpCard();
+  });
+
+  /* ============ BAŞLATMA ============ */
+  function setMode(mode) {
+    state.mode = mode;
+    const b = $("modeBadge");
+    b.className = "badge " + mode;
+    b.textContent = mode === "live" ? "CANLI · Claude" : mode === "mock" ? "SİMÜLASYON" : "Bağlanıyor…";
+    $("costNote").textContent = mode === "live"
+      ? "Her görev kendi Claude kullanım hakkından harcanır: 1 plan + çalışan sayısı kadar çalışma + 1 rapor çağrısı. İlk görevde Claude'a izin istenir."
+      : mode === "mock" ? "Claude bağlantısı yok; çalışanlar simüle ediliyor. Sayfayı Claude içinde açınca gerçek ekip devreye girer." : "";
+  }
+
+  render();
+  setMode("wait");
+  requestAnimationFrame(() => { const w = $("officeWrap"); if (w.scrollWidth > w.clientWidth) w.scrollLeft = (w.scrollWidth - w.clientWidth) / 2; });
+
+  (async () => {
+    const cap = window.claude && typeof window.claude.use === "function" ? window.claude : null;
+    if (!cap) { setMode("mock"); loadLocal(); return; }
+    const [s, d] = await Promise.all([cap.use("sample").catch(() => null), cap.use("db").catch(() => null)]);
+    sample = s;
+    setMode(sample ? "live" : "mock");
+    if (d) {
+      db = d;
+      let settled = false;
+      const timer = setTimeout(() => { if (!settled) loadLocal(); }, 10000);
+      try {
+        db.collection("tasks").orderBy("createdAt", "desc").limit(50).onSnapshot((snap) => {
+          settled = true; clearTimeout(timer);
+          ingestStored(snap.docs.map((x) => x.data()));
+          // silinenleri düşür
+          const ids = new Set(snap.docs.map((x) => x.id));
+          for (const id of [...state.tasks.keys()]) if (!ids.has(id) && !activeLocal.has(id)) state.tasks.delete(id);
+          renderTasks();
+        }, (e) => { console.warn("db dinleyici hatası", e); settled = true; clearTimeout(timer); loadLocal(); });
+      } catch (e) { console.warn(e); loadLocal(); }
+    } else {
+      loadLocal();
+    }
+  })();
+
+  function loadLocal() {
+    try { ingestStored(JSON.parse(localStorage.getItem(LS_KEY) || "[]")); } catch { /* yoksay */ }
+    renderTasks();
+  }
+})();
+</script>
