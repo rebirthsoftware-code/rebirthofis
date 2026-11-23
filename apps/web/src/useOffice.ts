@@ -21,6 +21,8 @@ function reducer(state: State, e: OfficeEvent): State {
       const tasks = exists ? snap.tasks.map((t) => (t.id === e.task.id ? e.task : t)) : [e.task, ...snap.tasks];
       return { snapshot: { ...snap, tasks } };
     }
+    case "task_deleted":
+      return { snapshot: { ...snap, tasks: snap.tasks.filter((t) => t.id !== e.taskId) } };
     case "log":
       return {
         snapshot: {

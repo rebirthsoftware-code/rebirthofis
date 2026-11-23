@@ -12,6 +12,8 @@ import {
   type OfficeEvent,
   type OfficeSnapshot,
   type Task,
+  type TaskDepth,
+  type TaskSpec,
 } from "@rebirth/shared";
 
 /**
@@ -28,7 +30,7 @@ export class OfficeStore {
   constructor(
     dataDir: string,
     readonly mode: "live" | "mock",
-    readonly model: string,
+    readonly models: Record<TaskDepth, string>,
   ) {
     this.file = path.join(dataDir, "office.json");
     for (const e of EMPLOYEES) {
@@ -47,11 +49,17 @@ export class OfficeStore {
       const raw = await readFile(this.file, "utf8");
       const parsed = JSON.parse(raw) as { tasks?: Task[] };
       for (const t of parsed.tasks ?? []) {
-        // Yarım kalmış görevler yeniden başlatılmaz; başarısız olarak işaretlenir.
-        if (!["done", "failed"].includes(t.status)) {
+        // Plan onayı bekleyen iş kaldığı yerden sürer; yarıda kalan diğerleri başarısız sayılır.
+        if (!["done", "failed", "awaiting"].includes(t.status)) {
           t.status = "failed";
-          t.error = "Sunucu yeniden başlatıldığı için görev yarıda kaldı.";
+          t.error = "Sunucu yeniden başlatıldığı için iş yarıda kaldı.";
         }
+        // Eski kayıt biçimini (brief alanı) yeni brife taşı
+        const legacy = t as Task & { brief?: string };
+        t.spec ??= { audience: "", material: legacy.brief ?? "", format: "", acceptance: "" };
+        t.depth ??= "teslim";
+        t.fixes ??= [];
+        t.planFirst ??= false;
         this.tasks.set(t.id, t);
       }
     } catch {
@@ -81,7 +89,7 @@ export class OfficeStore {
     return {
       name: OFFICE_NAME,
       mode: this.mode,
-      model: this.model,
+      models: this.models,
       departments: DEPARTMENTS,
       employees: EMPLOYEES.map(({ systemPrompt: _p, ...rest }) => rest),
       states: [...this.states.values()],
@@ -109,12 +117,24 @@ export class OfficeStore {
     return this.tasks.get(id);
   }
 
-  createTask(title: string, brief: string): Task {
+  deleteTask(id: string): boolean {
+    const ok = this.tasks.delete(id);
+    if (ok) {
+      this.emit({ type: "task_deleted", taskId: id });
+      this.scheduleSave();
+    }
+    return ok;
+  }
+
+  createTask(input: { title: string; spec: TaskSpec; depth: TaskDepth; planFirst: boolean }): Task {
     const now = new Date().toISOString();
     const task: Task = {
       id: `t_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-      title,
-      brief,
+      title: input.title,
+      spec: input.spec,
+      depth: input.depth,
+      planFirst: input.planFirst,
+      fixes: [],
       status: "queued",
       createdAt: now,
       updatedAt: now,

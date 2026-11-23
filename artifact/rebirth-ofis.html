@@ -28,7 +28,7 @@
     color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.45;
   }
   button, input, textarea, select { font: inherit; color: inherit; }
-  .app { min-height: 100%; display: grid; grid-template-columns: 1fr; }
+  .app { min-height: 100%; display: grid; grid-template-columns: minmax(0, 1fr); }
   @media (min-width: 900px) {
     .app { height: 100%; grid-template-columns: minmax(0, 1fr) 400px; }
     .panel { height: 100%; overflow-y: auto; border-left: 1px solid var(--line); border-top: none !important; }
@@ -86,8 +86,9 @@
   .primary:disabled { opacity: .5; cursor: not-allowed; }
   .ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
   .ghost:hover { color: var(--fg); }
-  .tier { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
-  .tier select { width: auto; padding: 6px 28px 6px 10px; font-size: 12px; }
+  .tier { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); min-width: 0; max-width: 100%; }
+  .tier select { width: auto; min-width: 0; max-width: 100%; padding: 6px 28px 6px 10px; font-size: 12px; text-overflow: ellipsis; }
+  .panel, .detail, .card, .form { min-width: 0; }
   .note { font-size: 12px; color: var(--muted); }
   .error { color: #fecaca; font-size: 12px; background: rgba(248,113,113,.12); border-radius: 6px; padding: 8px 10px; }
 
@@ -99,7 +100,8 @@
   .time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
   .status { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; text-transform: uppercase; letter-spacing: .5px; }
   .status.planning { color: var(--warn); border-color: rgba(251,191,36,.5); }
-  .status.running, .status.collecting { color: #86efac; border-color: rgba(34,197,94,.5); }
+  .status.awaiting { color: var(--accent); border-color: rgba(245,165,36,.6); }
+  .status.running, .status.collecting, .status.checking, .status.revising { color: #86efac; border-color: rgba(34,197,94,.5); }
   .status.done { color: #93c5fd; border-color: rgba(96,165,250,.5); }
   .status.failed { color: #fca5a5; border-color: rgba(248,113,113,.5); }
 
@@ -133,7 +135,29 @@
   .md table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; }
   .md th, .md td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
   .md.stream::after { content: "▍"; color: var(--accent); animation: blink 1s infinite; }
-  .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field > span { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: .3px; }
+  .field > span b { color: var(--accent); font-weight: 700; margin-right: 6px; font-variant-numeric: tabular-nums; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  .check input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .card { border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); padding: 10px 12px; margin-bottom: 10px; font-size: 13px; }
+  .card h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+  .card ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .card li { display: grid; grid-template-columns: 18px minmax(0,1fr); gap: 6px; }
+  .mark-ok { color: #86efac; font-weight: 700; } .mark-bad { color: #fca5a5; font-weight: 700; } .mark-q { color: var(--muted); font-weight: 700; }
+  .spec { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 3px 10px; font-size: 12px; color: var(--muted); margin: 8px 0; }
+  .spec dt { color: var(--fg); font-weight: 600; } .spec dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .file { border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); padding: 10px 12px; margin-bottom: 8px; }
+  .file .name { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; overflow-wrap: anywhere; }
+  .file .meta { font-size: 11px; color: var(--muted); }
+  .preview { margin-top: 10px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+  .preview iframe { display: block; width: 100%; height: 440px; border: 0; background: #fff; }
+  .svgprev { display: flex; gap: 14px; align-items: center; padding: 12px; background: #fff; color: #111; flex-wrap: wrap; }
+  .svgprev .big { flex: 1; min-width: 0; } .svgprev .big svg { max-width: 100%; height: auto; max-height: 260px; display: block; }
+  .svgprev .small { width: 32px; height: 32px; flex: none; outline: 1px dashed #bbb; } .svgprev .small svg { width: 32px; height: 32px; display: block; }
+  .svgprev .cap { font-size: 10px; color: #666; }
+  .warnline { color: var(--warn); font-size: 12px; }
 
   /* Ofis animasyonları */
   .emp .body { transform-box: fill-box; transform-origin: 50% 100%; }
@@ -163,7 +187,7 @@
       </div>
       <div class="stats">
         <span class="badge wait" id="modeBadge">Bağlanıyor…</span>
-        <span class="stat" id="statEmp">15 çalışan</span>
+        <span class="stat" id="statEmp">16 çalışan</span>
         <span class="stat" id="statActive">0 aktif</span>
         <span class="stat" id="statOpen">0 açık görev</span>
       </div>
@@ -174,27 +198,36 @@
 
   <section class="panel">
     <form class="form" id="newTask">
-      <h2>Yeni görev ver</h2>
-      <input type="text" id="title" placeholder="Başlık (örn. Berber randevu uygulaması)" maxlength="200" required>
-      <textarea id="brief" placeholder="Ne istediğini ekibe anlatır gibi yaz. Genel Müdür işi bölüp doğru çalışanlara dağıtacak." required></textarea>
-      <div class="chips" id="examples"></div>
+      <h2>Yeni iş ver</h2>
+      <div class="chips" id="templates" aria-label="Hazır iş türleri"></div>
+      <label class="field"><span><b>1</b>İş</span>
+        <input type="text" id="title" placeholder="Ne teslim edilecek, tek cümle. Örn: Berberim için tek sayfalık randevu sitesi" maxlength="300" required></label>
+      <label class="field"><span><b>2</b>Kim için</span>
+        <input type="text" id="audience" placeholder="Müşteri ya da izleyici kim?" maxlength="300"></label>
+      <label class="field"><span><b>3</b>Malzeme</span>
+        <textarea id="material" placeholder="Elindeki metin, not, tablo, örnek. Anlatmak yerine yapıştır."></textarea></label>
+      <label class="field"><span><b>4</b>Teslim biçimi</span>
+        <input type="text" id="format" placeholder="Dosya türü, ölçü, adet. Örn: tek HTML dosyası" maxlength="300"></label>
+      <label class="field"><span><b>5</b>Kabul ölçütü</span>
+        <input type="text" id="acceptance" placeholder="İşin bittiğini neye bakarak anlayacaksın?" maxlength="600"></label>
       <div class="row">
-        <label class="tier">Derinlik
-          <select id="tier">
-            <option value="quick">Hızlı</option>
-            <option value="default" selected>Dengeli</option>
-            <option value="complex">Derin</option>
+        <label class="tier">Model
+          <select id="depth">
+            <option value="kucuk">Küçük iş · Opus 5.5</option>
+            <option value="teslim" selected>Teslimlik iş · Fable 5.2</option>
+            <option value="uzun">Uzun iş · Fable 5.2 High</option>
           </select>
         </label>
         <button type="submit" class="primary" id="send">Ofise gönder</button>
       </div>
-      <div class="note" id="costNote">Her görev, kendi Claude kullanım hakkından harcanır: 1 plan + çalışan sayısı kadar çalışma + 1 rapor çağrısı.</div>
+      <label class="check"><input type="checkbox" id="planFirst" checked> Başlamadan önce planı bana göster</label>
+      <div class="note" id="costNote"></div>
       <div class="error" id="formError" hidden></div>
     </form>
 
     <div class="tasks">
-      <h2>Görevler</h2>
-      <div class="note" id="tasksEmpty">Henüz görev yok. Yukarıdan ilk işi ver; ofis canlanacak.</div>
+      <h2>İşler</h2>
+      <div class="note" id="tasksEmpty">Henüz iş yok. Yukarıdan ilk işi ver; ofis canlanacak.</div>
       <ul id="taskList"></ul>
     </div>
 
@@ -211,17 +244,17 @@
   /* ============ KADRO ============ */
   const OFFICE_NAME = "Rebirth Ofis";
   const RULES = `
-Kurallar:
+Çalışma kuralların:
 - Türkçe yaz. Teknik terimleri olduğu gibi bırakabilirsin.
-- Çıktını Markdown olarak ver; başlık, madde ve gerekiyorsa kod blokları kullan.
-- Sana verilen görev tanımının dışına çıkma; varsayımlarını açıkça yaz.
-- Belirsizlik varsa en makul kararı ver ve gerekçesini tek cümleyle belirt.
-- Gerçek dünyada doğrulanmamış bir şeyi kesin gibi sunma.`;
+- Sana hedef ve kabul ölçütü verilir; yolu sen bulursun. Teslimin bir müşterinin kabul edeceği düzeyde olmalı.
+- İnternete erişimin yok. Güncel veri, fiyat ya da kaynak gerektiren yerde uydurma; "doğrulanmadı" diye işaretle ve nereden doğrulanacağını yaz. Emin olmadığın yeri emin değilim diye belirt.
+- Hazır görsel, dış bağlantılı resim, hazır şablon ya da dış kütüphane kullanma; gereken her şeyi kendin yaz ve çiz.
+- Varsayım yaptıysan tek cümleyle söyle.`;
 
   const DEPARTMENTS = [
     { id: "yonetim", name: "Yönetim", color: "#f59e0b", x: 0, y: 0, w: 4, h: 2 },
     { id: "urun", name: "Ürün ve Tasarım", color: "#ec4899", x: 4, y: 0, w: 3, h: 2 },
-    { id: "devops", name: "DevOps ve Altyapı", color: "#06b6d4", x: 7, y: 0, w: 3, h: 2 },
+    { id: "devops", name: "DevOps ve Veri", color: "#06b6d4", x: 7, y: 0, w: 3, h: 2 },
     { id: "gelistirme", name: "Yazılım Geliştirme", color: "#22c55e", x: 0, y: 2, w: 4, h: 3 },
     { id: "kalite", name: "Kalite ve Güvenlik", color: "#8b5cf6", x: 4, y: 2, w: 3, h: 3 },
     { id: "pazarlama", name: "Pazarlama ve Müşteri", color: "#3b82f6", x: 7, y: 2, w: 3, h: 3 },
@@ -230,70 +263,75 @@ Kurallar:
     { id: "dinlenme", name: "Dinlenme Alanı", color: "#64748b", x: 5, y: 5, w: 5, h: 2, kind: "rest" },
   ];
 
+  const E = (id, name, role, dept, desk, skills, about, extra) => ({ id, name, role, dept, desk, skills, prompt: `Sen "${OFFICE_NAME}" ofisinde ${role} olarak çalışıyorsun. ${about}${RULES}`, ...extra });
   const EMPLOYEES = [
-    { id: "genel-mudur", name: "Genel Müdür", role: "Genel Müdür", dept: "yonetim", manager: true, desk: [0.8, 0.9],
-      skills: "Görevleri parçalar, doğru çalışana dağıtır, sonuçları birleştirir.",
-      prompt: `Sen "${OFFICE_NAME}" adlı yazılım ofisinin Genel Müdürüsün. Gelen her işi ekibe dağıtılabilir somut adımlara bölersin, her adımı en uygun çalışana verirsin ve ekibin çıktılarından tek bir yönetici raporu çıkarırsın. Küçük işler için 1-2 çalışan yeterlidir; büyük işlerde fazları kullanarak bağımlı adımları sıralar, bağımsız adımları aynı fazda paralel yürütürsün.${RULES}` },
-    { id: "proje-yoneticisi", name: "Proje Yöneticisi", role: "Proje Yöneticisi", dept: "yonetim", desk: [2.6, 0.9],
-      skills: "Kapsam, zaman planı, risk listesi, sprint ve görev kırılımı hazırlar.",
-      prompt: `Sen deneyimli bir yazılım Proje Yöneticisisin. Kapsam belirleme, iş kırılımı, sprint planı, risk analizi ve kabul kriterleri konusunda uzmansın. Çıktıların tablo ve madde ağırlıklı, uygulanabilir ve ölçülebilir olur.${RULES}` },
-    { id: "urun-analisti", name: "Ürün Analisti", role: "Ürün Analisti", dept: "urun", desk: [0.8, 0.9],
-      skills: "Gereksinim analizi, kullanıcı hikâyeleri, kabul kriterleri, rakip incelemesi.",
-      prompt: `Sen bir Ürün Analistisin. İş fikrini kullanıcı hikâyelerine, kabul kriterlerine ve önceliklendirilmiş gereksinim listesine dönüştürürsün. Kullanıcı sorununu ve değer önerisini net yazarsın.${RULES}` },
-    { id: "uiux", name: "UI/UX Tasarımcı", role: "UI/UX Tasarımcı", dept: "urun", desk: [2.2, 0.9],
-      skills: "Ekran akışları, bilgi mimarisi, bileşen listesi, erişilebilirlik.",
-      prompt: `Sen bir UI/UX Tasarımcısısın. Ekran akışlarını, sayfa yapılarını, bileşen listelerini ve etkileşim kurallarını metinle ve gerekirse ASCII wireframe ile anlatırsın. Erişilebilirlik ve mobil uyumu gözetirsin.${RULES}` },
-    { id: "devops", name: "DevOps Mühendisi", role: "DevOps Mühendisi", dept: "devops", desk: [0.8, 0.9],
-      skills: "CI/CD, Docker, bulut altyapısı, izleme, dağıtım stratejileri.",
-      prompt: `Sen bir DevOps Mühendisisin. CI/CD hatları, Dockerfile ve compose dosyaları, bulut mimarisi, izleme ve dağıtım stratejileri üretirsin. Çalıştırılabilir yapılandırma dosyaları ve komutlar verirsin.${RULES}` },
-    { id: "veri", name: "Veri Mühendisi", role: "Veri Mühendisi", dept: "devops", desk: [2.2, 0.9],
-      skills: "Veritabanı şeması, SQL, veri modelleme, raporlama sorguları.",
-      prompt: `Sen bir Veri Mühendisisin. Veri modelleri, veritabanı şemaları (DDL), indeks stratejileri ve raporlama sorguları yazarsın. Performans ve veri bütünlüğünü önceliklendirirsin.${RULES}` },
-    { id: "backend", name: "Backend Geliştirici", role: "Backend Geliştirici", dept: "gelistirme", desk: [0.8, 0.9],
-      skills: "API tasarımı, Node.js/TypeScript, Python, veritabanı erişimi, kimlik doğrulama.",
-      prompt: `Sen kıdemli bir Backend Geliştiricisin. REST/GraphQL API tasarımı, servis mimarisi, kimlik doğrulama, veri erişim katmanı ve hata yönetimi konusunda uzmansın. Çalışır, tipli ve test edilebilir kod yazarsın; aksi belirtilmedikçe TypeScript kullanırsın.${RULES}` },
-    { id: "frontend", name: "Frontend Geliştirici", role: "Frontend Geliştirici", dept: "gelistirme", desk: [2.2, 0.9],
-      skills: "React/TypeScript, bileşen mimarisi, durum yönetimi, performans, CSS.",
-      prompt: `Sen kıdemli bir Frontend Geliştiricisin. React + TypeScript ile bileşen mimarisi kurar, durum yönetimi, form doğrulama, erişilebilirlik ve performans optimizasyonu yaparsın. Çalışır kod örnekleri verirsin.${RULES}` },
-    { id: "mobil", name: "Mobil Geliştirici", role: "Mobil Geliştirici", dept: "gelistirme", desk: [1.5, 2.2],
-      skills: "React Native / Flutter, mağaza yayın süreci, bildirimler, çevrimdışı çalışma.",
-      prompt: `Sen bir Mobil Geliştiricisin. React Native ve Flutter ile iOS/Android uygulamaları geliştirir, mağaza yayın süreçlerini, bildirimleri ve çevrimdışı senaryoları bilirsin.${RULES}` },
-    { id: "qa", name: "QA Test Mühendisi", role: "QA Test Mühendisi", dept: "kalite", desk: [0.8, 0.9],
-      skills: "Test planı, test senaryoları, otomasyon (Playwright/Vitest), hata raporu.",
-      prompt: `Sen bir QA Test Mühendisisin. Test stratejisi, kabul testleri, uç durum listesi ve otomasyon kodu (Vitest, Playwright) üretirsin. Her gereksinim için en az bir doğrulama yolu yazarsın.${RULES}` },
-    { id: "guvenlik", name: "Güvenlik Analisti", role: "Güvenlik Analisti", dept: "kalite", desk: [1.5, 2.2],
-      skills: "Tehdit modelleme, OWASP, kimlik ve erişim, KVKK uyumu.",
-      prompt: `Sen bir Uygulama Güvenliği Analistisin. Tehdit modelleri çıkarır, OWASP Top 10 ve KVKK/GDPR açısından riskleri listeler, savunma önerileri ve güvenli kod örnekleri verirsin. Saldırı aracı değil, savunma önerisi üretirsin.${RULES}` },
-    { id: "icerik", name: "İçerik Yazarı", role: "İçerik Yazarı", dept: "pazarlama", desk: [0.8, 0.9],
-      skills: "Ürün metni, tanıtım sayfası, sosyal medya, blog ve e-posta metinleri.",
-      prompt: `Sen bir İçerik Yazarı ve pazarlama uzmanısın. Ürün tanıtım metinleri, açılış sayfası içerikleri, sosyal medya paylaşımları ve kullanıcı e-postaları yazarsın. Hedef kitleye göre ton ayarlarsın, abartıdan kaçınırsın.${RULES}` },
-    { id: "musteri", name: "Müşteri Temsilcisi", role: "Müşteri Temsilcisi", dept: "pazarlama", desk: [1.5, 2.2],
-      skills: "SSS, destek yanıt şablonları, kullanıcı geri bildirimi analizi, onboarding.",
-      prompt: `Sen bir Müşteri Başarı Temsilcisisin. SSS, destek yanıt şablonları, onboarding akışları ve kullanıcı geri bildirimi özetleri hazırlarsın. Empatik, net ve çözüm odaklı yazarsın.${RULES}` },
-    { id: "muhasebeci", name: "Muhasebeci", role: "Muhasebeci", dept: "finans", desk: [1.5, 0.9],
-      skills: "Maliyet tahmini, fiyatlandırma, bütçe, altyapı ve API giderleri.",
-      prompt: `Sen bir Finans ve Maliyet Uzmanısın. Yazılım projeleri için maliyet tahmini, fiyatlandırma modelleri, bütçe tabloları ve altyapı/API gider analizi hazırlarsın. Rakamları varsayımlarıyla birlikte tablo olarak verirsin; güncel fiyatları tahmini olarak işaretlersin.${RULES}` },
-    { id: "yedek", name: "Yedek Çalışan", role: "Genel Uzman", dept: "yedek", desk: [1, 0.9],
-      skills: "Diğer rollere uymayan her tür araştırma, özet, çeviri ve genel iş.",
-      prompt: `Sen ofisin çok yönlü Yedek Çalışanısın. Başka hiçbir uzmana tam uymayan işleri alırsın: araştırma özeti, çeviri, doküman düzenleme, karşılaştırma tabloları ve genel analiz.${RULES}` },
+    E("genel-mudur", "Genel Müdür", "Genel Müdür", "yonetim", [0.8, 0.9], "İşi brife çevirir, doğru çalışana dağıtır, teslimleri tek raporda toplar.",
+      "Gelen işi teslim edilebilir parçalara bölersin, her parçayı en uygun çalışana net bir hedef ve kabul ölçütüyle verirsin, sonunda teslimleri iş sahibine dürüstçe raporlarsın.", { manager: true }),
+    E("proje-yoneticisi", "Proje Yöneticisi", "Proje Yöneticisi", "yonetim", [2.6, 0.9], "Kapsam, zaman planı, risk listesi, sprint ve görev kırılımı.",
+      "Kapsam belirleme, iş kırılımı, sprint planı, risk analizi ve kabul kriterleri konusunda uzmansın."),
+    E("urun-analisti", "Ürün Analisti", "Ürün Analisti", "urun", [0.8, 0.9], "Gereksinim analizi, kullanıcı hikâyeleri, rakip ve pazar değerlendirmesi.",
+      "İş fikrini kullanıcı hikâyelerine, önceliklendirilmiş gereksinimlere ve pazar değerlendirmesine dönüştürürsün."),
+    E("uiux", "UI/UX Tasarımcı", "UI/UX Tasarımcı", "urun", [2.2, 0.9], "Ekran akışları, sayfa yapısı, bileşenler, erişilebilirlik, sunum kurgusu.",
+      "Ekran akışlarını, sayfa yapılarını ve sunum kurgusunu tasarlarsın; mobil uyumu ve okunabilirliği gözetirsin."),
+    E("devops", "DevOps Mühendisi", "DevOps Mühendisi", "devops", [0.8, 0.9], "CI/CD, Docker, bulut altyapısı, izleme, dağıtım.",
+      "CI/CD hatları, Docker yapılandırmaları, bulut mimarisi ve dağıtım stratejileri üretirsin; çalıştırılabilir dosya ve komut verirsin."),
+    E("veri", "Veri Analisti", "Veri Analisti", "devops", [2.2, 0.9], "Veri analizi, CSV/tablo inceleme, bulgu raporu, belgeden tabloya çıkarma, SQL ve şema.",
+      "Verideki eksik ve tutarsız yerleri önce söyler, her bulgunun yanına dayandığı rakamı yazarsın. Okuyamadığın ya da emin olmadığın hücreyi boş bırakıp nedenini yazarsın, tahmin etmezsin."),
+    E("backend", "Backend Geliştirici", "Backend Geliştirici", "gelistirme", [0.8, 0.9], "API tasarımı, Node.js/TypeScript, Python, veritabanı, kimlik doğrulama.",
+      "API tasarımı, servis mimarisi, kimlik doğrulama ve veri erişimi konusunda uzmansın; çalışır, tipli ve test edilebilir kod yazarsın."),
+    E("frontend", "Frontend Geliştirici", "Frontend Geliştirici", "gelistirme", [2.2, 0.9], "Tek dosyalık web sitesi, tarayıcı oyunu, kodla animasyon, React bileşenleri.",
+      "Tek HTML dosyasında çalışan siteler, tarayıcı oyunları ve kodla yapılmış animasyonlar üretirsin. Telefon genişliğinde taşan ya da okunmayan yer bırakmazsın."),
+    E("mobil", "Mobil Geliştirici", "Mobil Geliştirici", "gelistirme", [1.5, 2.2], "React Native / Flutter, mağaza yayın süreci, bildirimler.",
+      "React Native ve Flutter ile iOS/Android uygulamaları geliştirirsin."),
+    E("qa", "QA Test Mühendisi", "QA Test Mühendisi", "kalite", [0.8, 0.9], "Teslim kontrolü, test planı, uç durumlar, otomasyon.",
+      "Teslimleri kabul ölçütüne göre denetlersin: müşteri kabul eder mi, istenen parçaların hepsi var mı, dosya açılır mı, parçalar birbirini tutuyor mu."),
+    E("guvenlik", "Güvenlik Analisti", "Güvenlik Analisti", "kalite", [1.5, 2.2], "Tehdit modelleme, OWASP, kimlik ve erişim, KVKK uyumu.",
+      "Tehdit modelleri çıkarır, OWASP ve KVKK açısından riskleri listeler, savunma önerileri verirsin. Saldırı aracı değil, savunma üretirsin."),
+    E("icerik", "İçerik Yazarı", "İçerik Yazarı", "pazarlama", [0.8, 0.9], "Ürün metni, tanıtım sayfası metni, sosyal medya, e-posta, çeviri ve yerelleştirme.",
+      "Tanıtım metinleri yazar, çeviri ve yerelleştirme yaparsın. Kelime kelime çevirmez, o dilde birinin gerçekten yazacağı gibi yazarsın; marka adlarına dokunmazsın."),
+    E("grafik", "Grafik Tasarımcı", "Grafik Tasarımcı", "pazarlama", [2.2, 0.9], "Logo ve marka kimliği (SVG), afiş, sosyal medya görseli.",
+      "Logo, marka kılavuzu, afiş ve sosyal medya görsellerini SVG olarak kendin çizersin. Logonun siyah beyaz ve 32 piksel boyda da okunmasına, afişte başlığın uzaktan okunmasına dikkat edersin."),
+    E("musteri", "Müşteri Temsilcisi", "Müşteri Temsilcisi", "pazarlama", [1.5, 2.2], "SSS, destek yanıt şablonları, geri bildirim analizi, onboarding.",
+      "SSS, destek yanıt şablonları ve onboarding akışları hazırlarsın; empatik ve çözüm odaklı yazarsın."),
+    E("muhasebeci", "Muhasebeci", "Muhasebeci", "finans", [1.5, 0.9], "Maliyet tahmini, fiyatlandırma, bütçe tabloları.",
+      "Maliyet tahmini, fiyatlandırma modeli ve bütçe tabloları hazırlarsın; rakamları varsayımlarıyla verir, güncel fiyatları tahmini olarak işaretlersin."),
+    E("yedek", "Yedek Çalışan", "Genel Uzman", "yedek", [1, 0.9], "Diğer rollere uymayan araştırma, özet, doküman düzenleme, karşılaştırma.",
+      "Başka hiçbir uzmana tam uymayan işleri alırsın: araştırma özeti, doküman düzenleme, karşılaştırma tabloları ve genel analiz."),
   ];
   const EMP = Object.fromEntries(EMPLOYEES.map((e) => [e.id, e]));
   const DEPT = Object.fromEntries(DEPARTMENTS.map((d) => [d.id, d]));
   const MANAGER = EMPLOYEES.find((e) => e.manager);
+  const QA = EMP.qa;
 
-  const STATUS_LABEL = { idle: "Boşta", planning: "Görevi planlıyor", working: "Çalışıyor", reviewing: "Ekibi takip ediyor", collecting: "Sonucu topluyor", resting: "Dinleniyor" };
-  const TASK_LABEL = { queued: "Sırada", planning: "Planlanıyor", running: "Çalışılıyor", collecting: "Rapor hazırlanıyor", done: "Tamamlandı", failed: "Başarısız" };
+  const STATUS_LABEL = { idle: "Boşta", planning: "İşi planlıyor", working: "Çalışıyor", reviewing: "Kontrol ediyor", collecting: "Sonucu topluyor", resting: "Dinleniyor" };
+  const TASK_LABEL = { queued: "Sırada", planning: "Planlanıyor", awaiting: "Plan onayı bekliyor", running: "Çalışılıyor", checking: "Teslim kontrolü", revising: "Düzeltiliyor", collecting: "Rapor hazırlanıyor", done: "Tamamlandı", failed: "Başarısız" };
   const STATUS_COLOR = { idle: "#9ca3af", planning: "#f59e0b", working: "#22c55e", reviewing: "#3b82f6", collecting: "#a855f7", resting: "#64748b" };
+  const FINAL = ["done", "failed"];
 
-  const EXAMPLES = [
-    { title: "Berber randevu uygulaması", brief: "Berberler için online randevu alma web uygulaması. Müşteri kaydı, takvim, SMS hatırlatma ve kartla ödeme olsun. Güvenlik, test planı ve ilk 3 aylık maliyet tahmini de istiyorum." },
-    { title: "SaaS açılış sayfası", brief: "Küçük işletmeler için stok takip SaaS ürünümüzün açılış sayfası: değer önerisi, fiyatlandırma bölümü, SSS ve React ile bileşen yapısı. Pazarlama metinleri Türkçe olsun." },
-    { title: "Giriş ve yetkilendirme", brief: "Mevcut Node.js API'mize e-posta/şifre + Google ile giriş, rol tabanlı yetkilendirme ve KVKK uyumlu oturum yönetimi ekle. Test senaryoları ve güvenlik incelemesi dahil." },
+  /* Model seçimi: küçük işte Opus 5.5, baştan sona teslimde Fable 5.2 (uzun işte High). */
+  const DEPTH = {
+    kucuk: { label: "Opus 5.5", opts: { model: "claude-opus-5-5", modelTier: "default", effort: "medium" } },
+    teslim: { label: "Fable 5.2 · Medium", opts: { model: "claude-fable-5-2", modelTier: "complex", effort: "medium" } },
+    uzun: { label: "Fable 5.2 · High", opts: { model: "claude-fable-5-2", modelTier: "complex", effort: "high" } },
+  };
+
+  /* On hazır iş türü: köşeli parantezleri kendi işinle doldur. */
+  const TEMPLATES = [
+    { name: "Logo ve kimlik", title: "[İşletmenin adı ve ne yaptığı] için üç farklı logo yönü ve seçilecek yön için tek sayfalık marka kılavuzu", audience: "[hedef kitle kim]", material: "", format: "Üç logo SVG dosyası, her yönün neden öyle olduğunu anlatan birer cümle; ayrıca renkler, yazı tipi ve 32 px görünümü içeren tek sayfalık kılavuz (HTML)", acceptance: "Logo siyah beyaz ve 32 px boyda okunuyor; üç yön birbirinden gerçekten farklı" },
+    { name: "Sunum", title: "[Konu] hakkında 10 slaytlık sunum", audience: "[kime sunulacak]", material: "[rapor ya da notlarını buraya yapıştır]", format: "Tek HTML dosyasında 10 slayt; her slaytta tek fikir, başlık o fikri cümle olarak söylesin, rakamlar grafik olsun", acceptance: "Sadece başlıkları okuyan biri hikâyeyi anlıyor" },
+    { name: "Web sitesi", title: "[İşletme] için tek sayfalık tanıtım sitesi", audience: "[ziyaretçi kim]; sayfadan beklenen tek hareket: [randevu almak / formu doldurmak]", material: "Bölümler: açılış, ne sunduğumuz, üç müşteri yorumu, fiyat, iletişim. [Varsa metin ve fiyatları yapıştır]", format: "Tek HTML dosyası", acceptance: "Telefon genişliğinde taşan ya da okunmayan yer yok; beklenen hareket ilk ekranda görünüyor" },
+    { name: "Animasyon", title: "[Ürün / fikir] için [15] saniyelik tanıtım animasyonu", audience: "[izleyici kim]", material: "Sahneler: [1. sahne], [2. sahne], [3. sahne]. Renkler: [renkler]. Yazı tipi: [yazı tipi].", format: "Tek HTML dosyası (HTML, CSS, JavaScript ile), [dikey 1080×1920] oranında; önce saniyeli sahne planı", acceptance: "Her sahnede yazılar okunuyor, hiçbir şey üst üste binmiyor" },
+    { name: "Veri analizi", title: "Ekteki veride şu sorunun cevabı: [soru]", audience: "[raporu kim okuyacak]", material: "[CSV ya da tablo verisini buraya yapıştır]", format: "Tek sayfalık rapor (HTML) ve iki grafik; en fazla beş bulgu", acceptance: "Her bulgunun yanında dayandığı rakam var; verideki eksik ve tutarsız yerler ayrıca söylenmiş; emin olunmayan yer işaretli" },
+    { name: "Belgeden tabloya", title: "Ekteki [fatura / sözleşme / katalog] metinlerindeki bilgileri tek tabloya çıkar", audience: "[tabloyu kim kullanacak]", material: "[belge metinlerini buraya yapıştır]", format: "Tek CSV dosyası; sütunlar: [tarih, firma, tutar, KDV] ve bir 'not' sütunu", acceptance: "Okunamayan ya da emin olunmayan hücre boş ve nedeni not sütununda; satır sayısı ve toplam tutar belgelerle karşılaştırılmış" },
+    { name: "Çeviri", title: "Ekteki metni [İngilizceden Türkçeye] çevir", audience: "Metin [bir uygulamanın arayüzü / ürün sayfası] ve okuyan [kim]", material: "[metni buraya yapıştır]. Dokunulmayacaklar: marka adları ve [şu terimler].", format: "Çeviri metni (Markdown) ve emin olunamayan üç yerin listesi", acceptance: "Çeviri kokan cümle yok; o dilde birinin gerçekten yazacağı gibi" },
+    { name: "Pazar araştırması", title: "[Ürün / hizmet] için [Türkiye'de] pazar değerlendirmesi", audience: "[kararı kim verecek]", material: "Öğrenmek istediğim: rakipler kim, ne kadara satıyorlar, müşteriler en çok neden şikâyet ediyor. [Bildiklerini yapıştır]", format: "Karşılaştırma tablosu ve üç fırsat", acceptance: "Ofisin internet erişimi yok: her bilginin yanında ne zamana ait olduğu ve doğrulanması gerekip gerekmediği yazıyor; bilinmeyen şey uydurulmamış" },
+    { name: "Oyun", title: "Tarayıcıda çalışan küçük bir oyun: [oyunun fikri, bir iki cümle]", audience: "[kim oynayacak]", material: "", format: "Tek HTML dosyası; her şey kodla çizilsin", acceptance: "Klavyeyle ve dokunarak oynanıyor, skor tutuyor, kaybedince yeniden başlıyor; çok kolay ya da çok zor değil" },
+    { name: "Afiş", title: "[Etkinlik / kampanya] için afiş ve aynı tasarımın sosyal medya hali", audience: "[kim görecek]", material: "Üstünde yazacaklar: [başlık, tarih, yer]", format: "Üç farklı düzen önerisi; seçilen düzen iki ölçüde SVG: [A3 dikey] ve [Instagram gönderisi 1080×1350]", acceptance: "Başlık uzaktan okunuyor; tarih ve yer ilk bakışta bulunuyor ve iki ölçüde aynı yerde" },
   ];
 
   /* ============ DURUM ============ */
   const state = {
-    mode: "wait", // live | mock | wait
+    mode: "wait",
     states: Object.fromEntries(EMPLOYEES.map((e) => [e.id, { status: "idle", note: STATUS_LABEL.idle, at: Date.now() }])),
     tasks: new Map(),
     selectedEmp: null,
@@ -301,7 +339,8 @@ Kurallar:
     tab: "plan",
     canWrite: true,
   };
-  const activeLocal = new Set(); // bu sekmede yürüyen görevler
+  const ui = { open: new Set(), preview: null, planNote: "", fixNote: "", fixTarget: "report", lastHtml: "" };
+  const activeLocal = new Set();
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -310,18 +349,24 @@ Kurallar:
   const uid = () => "t_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
   /* ============ KALICILIK ============ */
-  let db = null;
+  let db = null, downloads = null;
   const saveChains = new Map();
-  const LS_KEY = "rebirth-ofis-tasks";
+  const LS_KEY = "rebirth-ofis-tasks-v2";
 
   function slimTask(t) {
-    const cap = (s, n) => (s && s.length > n ? s.slice(0, n) + "\n\n…(kısaltıldı)" : s);
-    return {
-      id: t.id, title: t.title, brief: t.brief, status: t.status, createdAt: t.createdAt, updatedAt: t.updatedAt,
-      plan: t.plan || null, report: cap(t.report, 60000) || null, error: t.error || null, tier: t.tier,
-      results: (t.results || []).map((r) => ({ ...r, output: cap(r.output, 24000) || null })),
-      log: (t.log || []).slice(-80),
+    const build = (outCap) => {
+      const cap = (s, n) => (s && s.length > n ? s.slice(0, n) + "\n\n…(saklarken kısaltıldı)" : s || null);
+      return {
+        id: t.id, title: t.title, spec: t.spec, depth: t.depth, planFirst: !!t.planFirst, status: t.status, createdAt: t.createdAt, updatedAt: t.updatedAt,
+        plan: t.plan || null, review: t.review || null, report: cap(t.report, 40000), error: t.error || null, modelNote: t.modelNote || null,
+        results: (t.results || []).map((r) => ({ ...r, output: cap(r.output, outCap) })),
+        log: (t.log || []).slice(-80), fixes: (t.fixes || []).slice(-20),
+      };
     };
+    let doc = build(90000);
+    if (JSON.stringify(doc).length > 230000) doc = build(30000);
+    if (JSON.stringify(doc).length > 230000) doc = build(8000);
+    return doc;
   }
   function persist(task) {
     task.updatedAt = now();
@@ -333,10 +378,7 @@ Kurallar:
       });
       saveChains.set(task.id, next);
     } else {
-      try {
-        const all = [...state.tasks.values()].map(slimTask).slice(0, 50);
-        localStorage.setItem(LS_KEY, JSON.stringify(all));
-      } catch { /* yoksay */ }
+      try { localStorage.setItem(LS_KEY, JSON.stringify([...state.tasks.values()].map(slimTask).slice(0, 30))); } catch { /* yoksay */ }
     }
   }
   async function removeTask(id) {
@@ -347,134 +389,289 @@ Kurallar:
     render();
   }
   function ingestStored(list) {
-    for (const t of list) {
-      if (!t || !t.id) continue;
-      if (activeLocal.has(t.id)) continue; // bu sekmede yürüyen görev yetkilidir
-      if (!["done", "failed"].includes(t.status)) { t.status = "failed"; t.error = t.error || "Sayfa kapandığı için görev yarıda kaldı."; }
-      t.results = t.results || []; t.log = t.log || [];
+    for (const raw of list) {
+      if (!raw || !raw.id || activeLocal.has(raw.id)) continue;
+      const t = { ...raw, spec: { ...(raw.spec || {}) }, results: (raw.results || []).map((r) => ({ ...r })), log: [...(raw.log || [])], fixes: [...(raw.fixes || [])] };
+      // Plan onayı bekleyen iş kaldığı yerden sürer; yarıda kalan diğerleri başarısız sayılır.
+      if (![...FINAL, "awaiting"].includes(t.status)) { t.status = "failed"; t.error = t.error || "Sayfa kapandığı için iş yarıda kaldı. Yeniden çalıştırabilirsin."; }
       state.tasks.set(t.id, t);
     }
   }
 
   /* ============ ARKA UÇ: CANLI (sample) / SİMÜLASYON ============ */
   let sample = null;
+  let inFlight = 0; const waiters = [];
+  async function slot() { if (inFlight >= 2) await new Promise((r) => waiters.push(r)); inFlight++; }
+  function release() { inFlight--; const w = waiters.shift(); if (w) w(); }
 
   const live = {
-    async plan(prompt, tier) {
-      return sample.json(prompt, { modelTier: tier, cache: false });
+    async json(prompt, opts) {
+      await slot();
+      try { return await sample.json(prompt, { ...opts, cache: false }); } finally { release(); }
     },
-    async complete(prompt, tier, onText) {
-      const { text, truncated } = await sample(prompt, { modelTier: tier, cache: false, onText: ({ text }) => onText && onText(text) });
-      return truncated ? text + "\n\n> Not: Yanıt uzunluk sınırına takıldı." : text;
+    async complete(prompt, opts, onText) {
+      await slot();
+      try {
+        const res = await sample(prompt, { ...opts, cache: false, onText: ({ text }) => onText && onText(text) });
+        return { text: res.truncated ? res.text + "\n\n> Not: Yanıt uzunluk sınırına takıldı; teslim yarım kalmış olabilir." : res.text, modelApplied: res.modelApplied || null, truncated: res.truncated };
+      } finally { release(); }
     },
   };
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms + Math.random() * ms * 0.5));
   const mock = {
-    async plan(prompt) {
+    async json(prompt, _opts, meta) {
       await wait(1200);
+      if (meta.kind === "review") return { passed: true, checks: (meta.acceptance || ["Teslim tamam"]).map((c) => ({ criterion: c, ok: true, note: "Simülasyonda geçti sayıldı." })), fixes: [] };
       const t = prompt.toLowerCase();
-      const picks = new Set();
-      const rules = [
-        [/api|backend|sunucu|veritaban|auth|giriş|kayıt/, "backend"], [/arayüz|ekran|react|web|frontend|site|sayfa|panel/, "frontend"],
-        [/mobil|ios|android|uygulama/, "mobil"], [/tasar|ux|ui|akış/, "uiux"], [/test|kalite|hata/, "qa"],
-        [/güvenlik|kvkk|şifre|yetki/, "guvenlik"], [/deploy|docker|ci|yayın|altyapı|bulut/, "devops"],
-        [/veri|rapor|sql|şema|tablo/, "veri"], [/pazarlama|tanıtım|metin|blog|sosyal/, "icerik"],
-        [/müşteri|destek|sss|onboarding/, "musteri"], [/maliyet|fiyat|bütçe|gelir/, "muhasebeci"], [/plan|sprint|zaman|takvim|kapsam/, "proje-yoneticisi"],
-      ];
-      for (const [re, id] of rules) if (re.test(t)) picks.add(id);
-      if (!picks.size) ["urun-analisti", "backend", "frontend"].forEach((x) => picks.add(x));
-      const ids = [...picks].slice(0, 5);
-      return { summary: "Simülasyon planı: görev anahtar kelimelere göre ekibe dağıtıldı.", steps: ids.map((employeeId, i) => ({ employeeId, title: EMP[employeeId].role + " çalışması", instruction: "Görev kapsamında " + EMP[employeeId].skills.toLowerCase() + " alanında katkı ver.", phase: i < 2 ? 1 : 2 })) };
+      const picks = [];
+      const rules = [[/logo|afiş|kimlik|görsel/, "grafik"], [/site|sayfa|oyun|animasyon|html|sunum/, "frontend"], [/veri|csv|tablo|analiz/, "veri"], [/çevir|metin|tanıtım/, "icerik"], [/api|backend|giriş|veritaban/, "backend"], [/pazar|rakip|gereksinim/, "urun-analisti"], [/maliyet|fiyat|bütçe/, "muhasebeci"], [/tasar|akış|ekran/, "uiux"]];
+      for (const [re, id] of rules) if (re.test(t) && !picks.includes(id)) picks.push(id);
+      if (!picks.length) picks.push("urun-analisti", "frontend");
+      const ids = picks.slice(0, 3);
+      return {
+        summary: "Simülasyon planı: iş anahtar kelimelere göre ekibe dağıtıldı.", audience: meta.task.spec.audience || "Belirtilmedi", format: meta.task.spec.format || "Markdown rapor",
+        acceptance: [meta.task.spec.acceptance || "İstenen her parça teslim edildi"],
+        steps: ids.map((employeeId, i) => ({ employeeId, title: EMP[employeeId].role + " teslimi", deliverable: "Örnek teslim", instruction: "İşin " + EMP[employeeId].skills.toLowerCase() + " kısmını teslim et.", format: i === 0 && ["frontend", "grafik"].includes(employeeId) ? "Tek dosya" : "Markdown", acceptance: ["Kabul ölçütünü karşılıyor"], phase: i < 2 ? 1 : 2 })),
+      };
     },
-    async complete(prompt, _tier, onText) {
+    async complete(_prompt, _opts, onText, meta) {
       await wait(1800);
-      const isReport = prompt.includes("## Rapor formatı");
-      const text = isReport
-        ? "## Yönetici Raporu (simülasyon)\n\nBu rapor sahte modda üretildi. Sayfayı Claude içinde açıp Claude kullanımına izin verince gerçek çalışanlar devreye girer.\n\n### Ekip çıktıları\n" + prompt.split("\n").filter((l) => l.startsWith("### ") && l.includes(" - ")).map((l) => "- " + l.slice(4)).join("\n") + "\n\n### Sonraki adımlar\n1. Claude erişimine izin ver\n2. Görevi yeniden gönder"
-        : "### Çalışma özeti (simülasyon)\n\n- Talimat alındı ve incelendi.\n- Bu alanda örnek bir çıktı üretildi.\n- Gerçek modda burada ayrıntılı analiz, kod ve öneriler yer alır.";
+      let text;
+      if (meta.kind === "report") text = "## Yönetici Raporu (simülasyon)\n\nBu rapor sahte modda üretildi. Sayfayı Claude içinde açıp Claude kullanımına izin verince gerçek ekip devreye girer.\n\n### Sonraki adım\n1. Claude erişimine izin ver\n2. İşi yeniden çalıştır";
+      else if (meta.emp === "grafik") text = "Örnek bir logo yönü (simülasyon).\n\nDosya: logo-ornek.svg\n```svg\n<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 120 120\"><rect width=\"120\" height=\"120\" rx=\"24\" fill=\"#1c1917\"/><circle cx=\"60\" cy=\"60\" r=\"30\" fill=\"#f5a524\"/><path d=\"M48 60l8 8 16-18\" fill=\"none\" stroke=\"#1c1917\" stroke-width=\"7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>\n```\n\n## Kendi kontrolüm\n- Simülasyon: ölçütler denetlenmedi.";
+      else if (meta.emp === "frontend") text = "Örnek tek dosyalık sayfa (simülasyon).\n\nDosya: index.html\n```html\n<!doctype html><html lang=\"tr\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Örnek</title><body style=\"font-family:system-ui;margin:0;padding:32px;background:#faf7f2;color:#1c1917\"><h1>Örnek teslim</h1><p>Gerçek modda burada çalışanın ürettiği site, oyun ya da animasyon açılır.</p><button onclick=\"this.textContent='Çalışıyor'\">Dene</button></body></html>\n```\n\n## Kendi kontrolüm\n- Simülasyon: ölçütler denetlenmedi.";
+      else text = "### Teslim (simülasyon)\n\n- Hedef alındı ve incelendi.\n- Gerçek modda burada ayrıntılı teslim yer alır.\n\n## Kendi kontrolüm\n- Simülasyon: ölçütler denetlenmedi.";
       onText && onText(text);
-      return text;
+      return { text, modelApplied: null };
     },
   };
   const backend = () => (state.mode === "live" ? live : mock);
 
-  /* ============ İSTEMLER ============ */
-  const roster = () => EMPLOYEES.filter((e) => !e.manager).map((e) => `- id: ${e.id} | ${e.name} (${e.role}) | ${e.skills}`).join("\n");
+  /* ============ BRİF VE İSTEMLER ============ */
+  const roster = () => EMPLOYEES.filter((e) => !e.manager).map((e) => `- id: ${e.id} | ${e.name} | ${e.skills}`).join("\n");
+  const list = (arr) => (arr && arr.length ? arr.map((x) => "- " + x).join("\n") : "- (belirtilmedi)");
 
-  const planPrompt = (task) => `${MANAGER.prompt}
+  function briefBlock(task) {
+    const sp = task.spec || {}, pl = task.plan;
+    return `## İşin brifi
+1. İş (ne teslim edilecek): ${task.title}
+2. Kim için: ${sp.audience || (pl && pl.audience) || "(iş sahibi belirtmedi)"}
+3. Malzeme:
+${sp.material || "(ek malzeme verilmedi)"}
+4. Teslim biçimi: ${sp.format || (pl && pl.format) || "(iş sahibi belirtmedi)"}
+5. Kabul ölçütü:
+${pl && pl.acceptance && pl.acceptance.length ? list(pl.acceptance) : "- " + (sp.acceptance || "(iş sahibi belirtmedi)")}`;
+  }
 
-Yeni bir iş geldi. Bunu ekibe dağıtılacak adımlara böl.
+  const PLAN_SHAPE = `{"summary": "planın 1-2 cümlelik özeti", "audience": "kim için", "format": "işin teslim biçimi", "acceptance": ["işin tamamı için ölçüt"], "steps": [{"employeeId": "frontend", "title": "kısa başlık", "deliverable": "bu adımda ne teslim edilecek, tek cümle, adetleriyle", "instruction": "hedef ve bağlam", "format": "dosya türü, ölçü, adet", "acceptance": ["bu teslimin kabul ölçütü"], "phase": 1}]}`;
 
-## İş
-Başlık: ${task.title}
-Açıklama:
-${task.brief}
+  const planPrompt = (task, note) => `${MANAGER.prompt}
+
+Yeni bir iş geldi. İşi ekibe dağıt.
+
+${briefBlock({ ...task, plan: null })}
 
 ## Kadro (yalnızca bu id'leri kullan)
 ${roster()}
 
-## Kurallar
-- En az 1, en fazla 6 adım. İş küçükse az adım kullan.
-- Her adım tek bir çalışana atanır.
-- "phase": bağımsız adımlar aynı fazda (paralel), önceki çıktıya ihtiyaç duyanlar sonraki fazda. Fazlar 1'den başlar.
-- "instruction": çalışanın bağlamı bilmeden de işi yapabileceği kadar ayrıntılı talimat.
+## Nasıl planlayacaksın
+- İş sahibinin yazdığı brif parçalarını aynen koru. Boş bıraktığı parçayı (kim için, teslim biçimi, kabul ölçütü) sen öner; önerin planda görünecek ve iş sahibi onaylayacak.
+- Kabul ölçütleri denetlenebilir olsun: "güzel olsun" değil, "telefon genişliğinde taşan yer yok" gibi. İstenen teslimleri adetleriyle say.
+- Her adım için çalışana adım adım komut verme; hedefi, bağlamı, teslim biçimini ve kabul ölçütünü ver, yolu o bulsun.
+- En az 1, en fazla 5 adım. Küçük iş için 1-2 çalışan yeter; gereksiz adım ekleme.
+- Tek dosya olarak istenen bir teslimi (site, oyun, animasyon, logo) tek bir çalışana ver; parçalara bölme. Ona girdi hazırlayacak çalışan varsa önceki faza koy.
+- "phase": bağımsız adımlar aynı fazda, önceki çıktıya ihtiyaç duyan sonraki fazda. Fazlar 1'den başlar.
+- Teslim kontrolünü plana adım olarak ekleme; ofis bunu sonunda kendiliğinden yapar.
+${task.plan && note ? `
+## Önceki planın
+${JSON.stringify({ summary: task.plan.summary, audience: task.plan.audience, format: task.plan.format, acceptance: task.plan.acceptance, steps: task.plan.steps.map(({ id, ...r }) => r) })}
 
-Yalnızca şu şekilde bir JSON nesnesi döndür, başka metin yazma:
-{"summary": "1-2 cümlelik özet", "steps": [{"employeeId": "backend", "title": "Kısa başlık", "instruction": "Ayrıntılı talimat", "phase": 1}]}`;
+## İş sahibinin düzeltme notu
+${note}
+
+Yalnızca notun gerektirdiği yerleri değiştir; planın geri kalanını aynen koru.` : ""}
+
+Yalnızca şu biçimde tek bir JSON nesnesi döndür, başka metin yazma:
+${PLAN_SHAPE}`;
+
+  const FILE_RULE = `Teslimin bir dosyaysa (HTML, SVG, CSV, Markdown) her dosyanın tamamını kısaltmadan tek bir kod bloğunda ver ve bloğun hemen üstündeki satıra dosya adını şöyle yaz: Dosya: ad.uzanti
+HTML dosyası tek başına açılabilmeli: stil ve kod içinde olsun, dışarıdan hiçbir şey yüklemesin, telefon genişliğinde de düzgün görünsün.`;
+
+  const SELF_CHECK = `Bitirince teslimini baştan sona bir kez daha kontrol et ve yanıtın sonuna "## Kendi kontrolüm" başlığı aç: her kabul ölçütü için geçti ya da kaldı yaz, eksik kalan ne varsa açıkça söyle.`;
+
+  const priorBlock = (prior) => (prior.length ? prior.map((p) => `### ${EMP[p.step.employeeId].name} - ${p.step.title}\n${p.output}`).join("\n\n") : "(henüz başka teslim yok)");
 
   const stepPrompt = (task, step, prior) => `${EMP[step.employeeId].prompt}
 
-## Genel iş
-Başlık: ${task.title}
-Açıklama:
-${task.brief}
+${briefBlock(task)}
 
-## Senin adımın: ${step.title}
-${step.instruction}
+## Senin teslimin: ${step.title}
+Teslim edilecek: ${step.deliverable || step.title}
+Hedef ve bağlam: ${step.instruction}
+Teslim biçimi: ${step.format || "Markdown"}
+Bu teslimin kabul ölçütü:
+${list(step.acceptance)}
 
-## Ekip arkadaşlarının önceki çıktıları
-${prior.length ? prior.map((p) => `### ${EMP[p.step.employeeId].name} - ${p.step.title}\n${p.output}`).join("\n\n") : "(henüz başka çıktı yok)"}
+## Ekip arkadaşlarının önceki teslimleri
+${priorBlock(prior)}
 
-Şimdi kendi adımını tamamla. Yalnızca kendi sorumluluğundaki çıktıyı üret; önceki çıktıları tekrar etme, gerekirse onlara atıf yap.`;
+${FILE_RULE}
 
-  const reportPrompt = (task, plan, outputs) => `${MANAGER.prompt}
+Yalnızca kendi teslimini üret; önceki teslimleri tekrar etme, gerekirse onlara dayan.
+${SELF_CHECK}`;
 
-Ekip işi tamamladı. Aşağıdaki çıktılardan iş sahibine sunulacak tek bir yönetici raporu hazırla.
+  const fixPrompt = (task, step, previous, note, who) => `${EMP[step.employeeId].prompt}
 
-## İş
-Başlık: ${task.title}
-Açıklama:
-${task.brief}
+${briefBlock(task)}
 
-## Plan özeti
-${plan.summary}
+## Senin teslimin: ${step.title}
+Teslim edilecek: ${step.deliverable || step.title}
+Teslim biçimi: ${step.format || "Markdown"}
+Kabul ölçütü:
+${list(step.acceptance)}
 
-## Ekip çıktıları
-${outputs.map((p) => `### ${EMP[p.step.employeeId].name} - ${p.step.title}\n${p.output}`).join("\n\n")}
+## Önceki teslimin
+${previous}
 
-## Rapor formatı
-1. **Özet** (3-5 cümle)
-2. **Teslim edilenler** (her çalışanın katkısı, kısa)
-3. **Birleştirilmiş sonuç**: çelişen yerleri uzlaştır, kritik kod ve yapılandırmaları koru
-4. **Riskler ve açık sorular**
-5. **Sonraki adımlar**
+## ${who} düzeltme notu
+${note}
 
-Ekip çıktılarının tamamını kopyalama; iş sahibinin karar vermesi için gerekli olanı aktar.`;
+Yalnızca notta isteneni değiştir; geri kalan her şeyi aynen koru. Baştan yazma.
+Dosya teslim ettiysen değişen dosyanın tamamını yine "Dosya: ad.uzanti" satırı ve tek kod bloğuyla ver; değişmeyen dosyaları da aynen tekrar ver ki teslim eksik kalmasın.
+${SELF_CHECK}`;
 
-  function normalizePlan(input) {
+  const clip = (s, n) => (s.length > n ? s.slice(0, n) + "\n…(devamı kontrol için kısaltıldı)" : s);
+
+  const reviewPrompt = (task, plan, outputs, auto) => `${QA.prompt}
+
+Ekip işi bitirdi. Teslimleri iş sahibine gitmeden önce denetle. Tek soru şu: bu teslimi bir müşteri kabul eder mi?
+
+${briefBlock(task)}
+
+## Adımlar ve ölçütleri
+${plan.steps.map((s) => `- ${s.id} | ${EMP[s.employeeId].name} | ${s.deliverable || s.title} | ölçüt: ${(s.acceptance || []).join("; ") || "-"}`).join("\n")}
+
+## Teslimler
+${outputs.map((p) => `### ${p.step.id} - ${EMP[p.step.employeeId].name} - ${p.step.title}\n${clip(p.output, 60000)}`).join("\n\n")}
+
+## Otomatik bulgular
+${auto.length ? list(auto) : "- Dosya düzeyinde otomatik bir sorun bulunmadı."}
+
+## Dört yerden bak
+1. Kalite: müşterinin kabul edeceği düzeyde mi?
+2. Eksik teslim: istenen parçaları say; eksik olan var mı?
+3. Bozuk dosya: dosyalar tam mı, yarım kalmış ya da açılmayacak olan var mı?
+4. Tutarsızlık: parçalar birbirini tutuyor mu (isim, renk, rakam, tarih)?
+
+Çalışanın "Kendi kontrolüm" bölümüne güvenme; teslimin kendisine bak. Kusur uydurma: gerçekten kabulü engelleyen bir şey yoksa geçir.
+Düzeltme gerekiyorsa en fazla 3 not yaz; her not tek bir adıma gitsin ve tam olarak neyin değişeceğini söylesin.
+
+Yalnızca şu biçimde tek bir JSON nesnesi döndür:
+{"passed": true, "checks": [{"criterion": "ölçüt", "ok": true, "note": "kısa gerekçe"}], "fixes": [{"stepId": "s1", "note": "tam olarak ne değişecek"}]}`;
+
+  const reportPrompt = (task, plan, outputs, review, files) => `${MANAGER.prompt}
+
+Ekip işi teslim etti. İş sahibine kısa ve dürüst bir teslim raporu yaz.
+
+${briefBlock(task)}
+
+## Teslimler
+${outputs.map((p) => `### ${EMP[p.step.employeeId].name} - ${p.step.title}\n${clip(p.output, 40000)}`).join("\n\n")}
+
+## Teslim dosyaları (iş sahibi bunları "Teslimler" sekmesinde açıp indirebiliyor)
+${files.length ? list(files.map((f) => f.name)) : "- (dosya teslimi yok)"}
+
+## Teslim kontrolünün sonucu
+${review ? JSON.stringify({ passed: review.passed, checks: review.checks, fixesApplied: review.fixes }) : "(kontrol yapılamadı)"}
+
+## Rapor biçimi
+1. **Sonuç**: iş kabul ölçütünü karşılıyor mu, tek paragraf. Karşılamıyorsa bunu ilk cümlede söyle.
+2. **Teslim edilenler**: istenen parçaları tek tek say, her birinin yanına teslim edildi ya da eksik yaz.
+3. **Kabul ölçütleri**: her ölçüt için geçti ya da kaldı ve tek cümle gerekçe.
+4. **Eksik kalan ve doğrulanması gerekenler**: yoksa "yok" yaz.
+5. **İş sahibi teslimi alınca neye baksın**: en fazla üç somut kontrol.
+
+Dosyaların içeriğini rapora kopyalama; adlarıyla an. Metin teslimi varsa (çeviri, analiz gibi) sonucu raporda ver. Olmayan bir şeyi olmuş gibi yazma.`;
+
+  const reportFixPrompt = (task, previous, note, changed) => `${MANAGER.prompt}
+
+${briefBlock(task)}
+
+## Önceki raporun
+${previous}
+${changed ? `
+## Bu arada değişen teslim
+${changed}` : ""}
+
+## İş sahibinin düzeltme notu
+${note}
+
+Raporu yalnızca notun ve değişen teslimin gerektirdiği yerlerde güncelle; geri kalanını aynen koru. Raporun tamamını yeniden ver.`;
+
+  function normalizePlan(input, task) {
     if (!input || !Array.isArray(input.steps) || !input.steps.length) throw new Error("Plan boş geldi");
-    const steps = input.steps.slice(0, 6).map((s, i) => {
+    const arr = (v) => (Array.isArray(v) ? v.map(String).filter(Boolean).slice(0, 8) : v ? [String(v)] : []);
+    const steps = input.steps.slice(0, 5).map((s, i) => {
       let id = String(s.employeeId || "");
       if (!EMP[id] || EMP[id].manager) {
         const byName = EMPLOYEES.find((e) => !e.manager && (e.name.toLowerCase() === id.toLowerCase() || e.role.toLowerCase() === id.toLowerCase()));
         id = byName ? byName.id : "yedek";
       }
-      return { id: "s" + (i + 1), employeeId: id, title: String(s.title || "Adım " + (i + 1)).trim(), instruction: String(s.instruction || ""), phase: Math.max(1, Math.round(Number(s.phase) || 1)) };
+      return { id: "s" + (i + 1), employeeId: id, title: String(s.title || "Adım " + (i + 1)).trim(), deliverable: String(s.deliverable || ""), instruction: String(s.instruction || ""), format: String(s.format || ""), acceptance: arr(s.acceptance), phase: Math.max(1, Math.round(Number(s.phase) || 1)) };
     });
     const uniq = [...new Set(steps.map((s) => s.phase))].sort((a, b) => a - b);
     for (const s of steps) s.phase = uniq.indexOf(s.phase) + 1;
-    return { summary: String(input.summary || ""), steps };
+    const sp = task.spec || {};
+    const acceptance = arr(input.acceptance);
+    return { summary: String(input.summary || ""), audience: sp.audience || String(input.audience || ""), format: sp.format || String(input.format || ""), acceptance: acceptance.length ? acceptance : arr(sp.acceptance), steps };
+  }
+
+  /* ============ TESLİM DOSYALARI ============ */
+  const EXT = { html: "html", svg: "svg", csv: "csv", md: "md", markdown: "md", json: "json", txt: "txt", xml: "svg" };
+  function extractFiles(text, prefix) {
+    const out = [];
+    if (!text) return out;
+    const re = /```([a-zA-Z0-9]+)[^\n]*\n([\s\S]*?)```/g;
+    let m, n = 0;
+    while ((m = re.exec(text))) {
+      const lang = m[1].toLowerCase();
+      const before = text.slice(Math.max(0, m.index - 200), m.index);
+      const labels = [...before.matchAll(/Dosya:\s*[`*]*([\w\-.]+\.[a-zA-Z0-9]+)/g)];
+      const label = labels.length ? labels[labels.length - 1][1] : null;
+      let ext = EXT[lang];
+      if (lang === "xml" && !/<svg[\s>]/.test(m[2])) ext = null;
+      if (!label && !["html", "svg", "csv"].includes(ext || "")) continue;
+      const labelExt = label ? label.split(".").pop().toLowerCase() : null;
+      if (label && !["html", "svg", "csv", "md", "json", "txt"].includes(labelExt)) continue;
+      n++;
+      out.push({ name: label || `${prefix || "teslim"}-${n}.${ext}`, ext: labelExt || ext, content: m[2].replace(/\s+$/, "") + "\n" });
+    }
+    return out;
+  }
+  function taskFiles(task) {
+    const byName = new Map();
+    for (const s of task.plan ? task.plan.steps : []) {
+      const r = (task.results || []).find((x) => x.stepId === s.id);
+      if (!r || !r.output || r.status === "running") continue;
+      for (const f of extractFiles(r.output, s.employeeId)) byName.set(f.name, { ...f, stepId: s.id, by: s.employeeId });
+    }
+    return [...byName.values()];
+  }
+  /* Model çağırmadan yakalanabilen bozuk dosya belirtileri */
+  function autoFindings(outputs) {
+    const found = [];
+    for (const p of outputs) {
+      const who = `${p.step.id} (${EMP[p.step.employeeId].name})`;
+      if ((p.output.match(/```/g) || []).length % 2 === 1) found.push(`${who}: bir kod bloğu kapanmamış, dosya yarım kalmış olabilir.`);
+      if (p.truncated) found.push(`${who}: yanıt uzunluk sınırına takıldı.`);
+      for (const f of extractFiles(p.output, p.step.employeeId)) {
+        if (f.ext === "html" && !/<\/html>\s*$/i.test(f.content.trim()) && /<html[\s>]/i.test(f.content)) found.push(`${who}: ${f.name} </html> ile bitmiyor, yarım kalmış olabilir.`);
+        if (f.ext === "html" && /(src|href)\s*=\s*["']https?:\/\//i.test(f.content)) found.push(`${who}: ${f.name} dışarıdan kaynak yüklüyor; tek başına açılmayabilir.`);
+        if (f.ext === "svg" && !/<\/svg>\s*$/i.test(f.content.trim())) found.push(`${who}: ${f.name} </svg> ile bitmiyor.`);
+      }
+    }
+    return found;
   }
 
   /* ============ ORKESTRATÖR ============ */
@@ -493,12 +690,23 @@ Ekip çıktılarının tamamını kopyalama; iş sahibinin karar vermesi için g
   }
   function setTask(task, patch) { Object.assign(task, patch); persist(task); renderTasks(); }
 
-  function enqueue(task) { queue.push(task.id); pump(); }
+  function enqueue(job) { activeLocal.add(job.id); queue.push(job); pump(); }
   async function pump() {
     if (running) return;
     running = true;
-    try { while (queue.length) await runTask(queue.shift()).catch((e) => console.error(e)); }
-    finally { running = false; }
+    try {
+      while (queue.length) {
+        const job = queue.shift();
+        const task = state.tasks.get(job.id);
+        if (!task) { activeLocal.delete(job.id); continue; }
+        try {
+          if (job.stage === "plan") await planStage(task, job.note);
+          else if (job.stage === "exec") await execStage(task);
+          else if (job.stage === "fix") await userFixStage(task, job.target, job.note);
+        } catch (e) { failTask(task, e); }
+        finally { if (!queue.some((j) => j.id === task.id)) activeLocal.delete(task.id); renderDetail(true); }
+      }
+    } finally { running = false; }
   }
 
   function errText(e) {
@@ -506,92 +714,200 @@ Ekip çıktılarının tamamını kopyalama; iş sahibinin karar vermesi için g
     if (e.code) {
       const map = {
         not_granted: "Claude kullanımına izin verilmedi. Sayfanın izinlerinden Claude'a izin verip tekrar dene.",
-        rate_limited: e.reason === "usage_limit" ? "Claude kullanım sınırına ulaştın. Biraz sonra tekrar dene." : "Çok fazla istek gitti. Biraz bekleyip tekrar dene.",
-        refused: "Claude bu isteği reddetti. Görev tanımını değiştirip tekrar dene.",
-        invalid_json: "Plan okunamadı. Görevi yeniden gönder.",
-        prompt_too_large: "Görev metni çok uzun. Kısaltıp tekrar dene.",
+        rate_limited: e.reason === "usage_limit" ? "Claude kullanım hakkın doldu. Hakkın yenilenince tekrar dene ya da küçük iş modunu seç." : "Çok fazla istek gitti. Biraz bekleyip tekrar dene.",
+        refused: "Claude bu isteği reddetti. İş tanımını değiştirip tekrar dene.",
+        invalid_json: "Yanıt okunamadı. İşi yeniden çalıştır.",
+        prompt_too_large: "İş metni çok uzun. Malzemeyi kısaltıp tekrar dene.",
         session_expired: "Oturum süresi doldu. Sayfayı yenileyip tekrar giriş yap.",
         sampling_disabled: "Bu hesapta Claude kullanılamıyor.",
         cancelled: "İptal edildi.",
-        empty_completion: "Claude boş yanıt verdi. Görevi sadeleştirip tekrar dene.",
+        empty_completion: "Claude boş yanıt verdi. İşi sadeleştirip tekrar dene.",
       };
-      return map[e.code] || ("Geçici bir hata oluştu (" + e.code + "). Tekrar dene.");
+      return map[e.code] || "Geçici bir hata oluştu (" + e.code + "). Tekrar dene.";
     }
     return e.message || String(e);
   }
+  const FATAL = ["not_granted", "sampling_disabled", "session_expired", "rate_limited"];
 
-  async function runTask(taskId) {
-    const task = state.tasks.get(taskId);
-    if (!task) return;
-    activeLocal.add(taskId);
+  function failTask(task, e) {
+    const msg = errText(e);
+    setTask(task, { status: "failed", error: msg });
+    log(task, `İş durdu: ${msg}`, MANAGER.id);
+    for (const id of Object.keys(state.states)) if (state.states[id].taskId === task.id && !["idle", "resting"].includes(state.states[id].status)) setEmp(id, "idle");
+  }
+  const opts = (task) => DEPTH[task.depth || "teslim"].opts;
+  function noteModel(task, res) {
+    if (state.mode !== "live" || task.modelNote) return;
+    const want = opts(task).model;
+    task.modelNote = res.modelApplied ? `Yanıtlayan model: ${res.modelApplied}` : `İstenen model (${want}) bu görünümde doğrulanamadı; hesabının izin verdiği en yakın model yanıtlamış olabilir.`;
+    log(task, task.modelNote);
+  }
+
+  async function planStage(task, note) {
     const be = backend();
-    const tier = task.tier || "default";
+    setTask(task, { status: "planning", error: null });
+    setEmp(MANAGER.id, "planning", note ? "Planı düzeltiyor" : "İşi planlıyor", task.id);
+    log(task, note ? `Plan düzeltme notu: "${note}"` : `İş alındı: "${task.title}"`, MANAGER.id);
+    const plan = normalizePlan(await be.json(planPrompt(task, note), opts(task), { kind: "plan", task }), task);
+    setTask(task, { plan, results: plan.steps.map((s) => ({ stepId: s.id, employeeId: s.employeeId, status: "pending" })), review: null, report: null });
+    log(task, `Plan hazır: ${plan.steps.length} adım, ${new Set(plan.steps.map((s) => s.phase)).size} faz. ${plan.summary}`, MANAGER.id);
+    if (task.planFirst) {
+      setTask(task, { status: "awaiting" });
+      setEmp(MANAGER.id, "idle", "Planı onaya sundu");
+      if (state.selectedTask === task.id) { state.tab = "plan"; renderDetail(true); }
+      return;
+    }
+    await execStage(task);
+  }
+
+  async function runStep(task, step, prompt, label) {
+    const be = backend();
+    const emp = EMP[step.employeeId];
+    const res = task.results.find((r) => r.stepId === step.id);
+    Object.assign(res, { status: "running", startedAt: now() });
+    setEmp(emp.id, "working", "Düşünüyor…", task.id);
+    log(task, `${label}`, emp.id);
+    let lastPaint = 0;
+    const out = await be.complete(prompt, opts(task), (text) => {
+      res.output = text;
+      if (state.states[emp.id].note !== step.title) setEmp(emp.id, "working", step.title, task.id);
+      const t = Date.now();
+      if (t - lastPaint > 400) { lastPaint = t; paintStream(task, "out-" + step.id, text); }
+    }, { kind: "step", emp: emp.id });
+    noteModel(task, out);
+    Object.assign(res, { status: "done", output: out.text, finishedAt: now(), truncated: !!out.truncated });
+    setEmp(emp.id, "idle", "Teslim etti");
+    return out;
+  }
+
+  async function execStage(task) {
+    const be = backend();
+    const plan = task.plan;
+    setTask(task, { status: "running" });
+    setEmp(MANAGER.id, "reviewing", "Ekibi takip ediyor", task.id);
+
+    const phases = [...new Set(plan.steps.map((s) => s.phase))].sort((a, b) => a - b);
+    const outputs = [];
+    for (const phase of phases) {
+      const steps = plan.steps.filter((s) => s.phase === phase);
+      log(task, `Faz ${phase} başladı: ${steps.map((s) => EMP[s.employeeId].name).join(", ")}`);
+      const prior = outputs.slice();
+      await Promise.all(steps.map(async (step) => {
+        try {
+          const out = await runStep(task, step, stepPrompt(task, step, prior), `${step.title} üzerinde çalışıyor`);
+          outputs.push({ step, output: out.text, truncated: out.truncated });
+          log(task, `${step.title} teslim edildi`, step.employeeId);
+        } catch (e) {
+          const msg = errText(e), res = task.results.find((r) => r.stepId === step.id);
+          Object.assign(res, { status: "failed", output: (e && e.text ? e.text + "\n\n" : "") + "Hata: " + msg, finishedAt: now() });
+          outputs.push({ step, output: `(Bu teslim yapılamadı: ${msg})` });
+          setEmp(step.employeeId, "idle", "Hata bildirdi");
+          log(task, `${step.title} yapılamadı: ${msg}`, step.employeeId);
+          if (e && FATAL.includes(e.code)) throw e;
+        }
+      }));
+    }
+
+    // Teslim kontrolü: müşteri kabul eder mi?
+    setTask(task, { status: "checking" });
+    setEmp(QA.id, "reviewing", "Teslimi kontrol ediyor", task.id);
+    log(task, "Teslim kontrolü başladı", QA.id);
+    let review = null;
     try {
-      setTask(task, { status: "planning" });
-      setEmp(MANAGER.id, "planning", "Görevi planlıyor", taskId);
-      log(task, `Görev alındı: "${task.title}"`, MANAGER.id);
+      const raw = await be.json(reviewPrompt(task, plan, outputs, autoFindings(outputs)), opts(task), { kind: "review", acceptance: plan.acceptance });
+      const stepIds = new Set(plan.steps.map((s) => s.id));
+      review = {
+        passed: !!raw.passed,
+        checks: (Array.isArray(raw.checks) ? raw.checks : []).slice(0, 12).map((c) => ({ criterion: String(c.criterion || ""), ok: !!c.ok, note: String(c.note || "") })),
+        fixes: (Array.isArray(raw.fixes) ? raw.fixes : []).filter((f) => f && stepIds.has(String(f.stepId)) && f.note).slice(0, 3).map((f) => ({ stepId: String(f.stepId), note: String(f.note), applied: false })),
+      };
+      setTask(task, { review });
+      log(task, review.passed && !review.fixes.length ? "Teslim kontrolü geçti" : `Teslim kontrolü ${review.fixes.length} düzeltme istedi`, QA.id);
+    } catch (e) {
+      log(task, `Teslim kontrolü yapılamadı: ${errText(e)}`, QA.id);
+      if (e && FATAL.includes(e.code)) { setEmp(QA.id, "idle"); throw e; }
+    }
+    setEmp(QA.id, "idle", "Kontrolü bitirdi");
 
-      const plan = normalizePlan(await be.plan(planPrompt(task), tier));
-      setTask(task, { plan, status: "running", results: plan.steps.map((s) => ({ stepId: s.id, employeeId: s.employeeId, status: "pending" })) });
-      log(task, `Plan hazır: ${plan.steps.length} adım, ${new Set(plan.steps.map((s) => s.phase)).size} faz. ${plan.summary}`, MANAGER.id);
-      setEmp(MANAGER.id, "reviewing", "Ekibi takip ediyor", taskId);
-
-      const phases = [...new Set(plan.steps.map((s) => s.phase))].sort((a, b) => a - b);
-      const outputs = [];
-      for (const phase of phases) {
-        const steps = plan.steps.filter((s) => s.phase === phase);
-        log(task, `Faz ${phase} başladı: ${steps.map((s) => EMP[s.employeeId].name).join(", ")}`);
-        await Promise.all(steps.map(async (step) => {
-          const emp = EMP[step.employeeId];
+    // Tek düzeltme turu: yalnızca istenen yer değişir.
+    if (review && review.fixes.length) {
+      setTask(task, { status: "revising" });
+      await Promise.all(review.fixes.map(async (fix) => {
+        const step = plan.steps.find((s) => s.id === fix.stepId);
+        const entry = outputs.find((o) => o.step.id === step.id);
+        const previous = entry ? entry.output : "";
+        try {
+          const out = await runStep(task, step, fixPrompt(task, step, previous, fix.note, "Kalite kontrolün"), `Düzeltiyor: ${fix.note}`);
+          if (entry) Object.assign(entry, { output: out.text, truncated: out.truncated });
+          fix.applied = true;
+          const res = task.results.find((r) => r.stepId === step.id); res.revised = true;
+          log(task, `${step.title} düzeltildi`, step.employeeId);
+        } catch (e) {
           const res = task.results.find((r) => r.stepId === step.id);
-          Object.assign(res, { status: "running", startedAt: now() });
-          setEmp(emp.id, "working", "Düşünüyor…", taskId);
-          log(task, `${step.title} üzerinde çalışıyor`, emp.id);
-          let lastPaint = 0;
-          try {
-            const output = await be.complete(stepPrompt(task, step, outputs), tier, (text) => {
-              res.output = text;
-              if (state.states[emp.id].note !== step.title) setEmp(emp.id, "working", step.title, taskId);
-              const t = Date.now();
-              if (t - lastPaint > 400) { lastPaint = t; renderDetail(); }
-            });
-            outputs.push({ step, output });
-            Object.assign(res, { status: "done", output, finishedAt: now() });
-            setEmp(emp.id, "idle", "Sonucu teslim etti");
-            log(task, `${step.title} tamamlandı`, emp.id);
-          } catch (e) {
-            const msg = errText(e);
-            Object.assign(res, { status: "failed", output: (e && e.text ? e.text + "\n\n" : "") + "Hata: " + msg, finishedAt: now() });
-            outputs.push({ step, output: `(Bu adım başarısız oldu: ${msg})` });
-            setEmp(emp.id, "idle", "Hata bildirdi");
-            log(task, `${step.title} başarısız: ${msg}`, emp.id);
-            if (e && ["not_granted", "sampling_disabled", "session_expired", "rate_limited"].includes(e.code)) throw e;
-          }
-        }));
-      }
+          Object.assign(res, { status: "done", output: previous });
+          setEmp(step.employeeId, "idle", "Düzeltemedi");
+          log(task, `${step.title} düzeltilemedi: ${errText(e)}`, step.employeeId);
+          if (e && FATAL.includes(e.code)) throw e;
+        }
+      }));
+      setTask(task, { review });
+    }
 
-      setTask(task, { status: "collecting" });
-      setEmp(MANAGER.id, "collecting", "Sonucu topluyor", taskId);
-      let lastPaint = 0;
-      const report = await be.complete(reportPrompt(task, plan, outputs), tier, (text) => {
+    // Rapor
+    setTask(task, { status: "collecting" });
+    setEmp(MANAGER.id, "collecting", "Sonucu topluyor", task.id);
+    let lastPaint = 0;
+    const rep = await be.complete(reportPrompt(task, plan, outputs, review, taskFiles(task)), opts(task), (text) => {
+      task.report = text;
+      const t = Date.now();
+      if (t - lastPaint > 400) { lastPaint = t; paintStream(task, "reportBody", text); }
+    }, { kind: "report" });
+    setTask(task, { status: "done", report: rep.text });
+    setEmp(MANAGER.id, "idle", "Raporu teslim etti");
+    log(task, "Teslim raporu hazır", MANAGER.id);
+    if (state.selectedTask === task.id) { state.tab = taskFiles(task).length ? "files" : "report"; renderDetail(true); }
+  }
+
+  /* İş sahibinin noktasal düzeltmesi: yalnızca söylenen yer değişir. */
+  async function userFixStage(task, target, note) {
+    const be = backend();
+    task.fixes = task.fixes || [];
+    task.fixes.push({ at: now(), target, note });
+    setTask(task, { status: "revising", error: null });
+    let changed = null;
+    if (target !== "report") {
+      const step = task.plan.steps.find((s) => s.id === target);
+      const res = task.results.find((r) => r.stepId === target);
+      const previous = res.output || "";
+      try {
+        const out = await runStep(task, step, fixPrompt(task, step, previous, note, "İş sahibinin"), `Düzeltiyor: ${note}`);
+        res.revised = true;
+        changed = `### ${EMP[step.employeeId].name} - ${step.title}\n${clip(out.text, 40000)}`;
+        log(task, `${step.title} düzeltildi`, step.employeeId);
+      } catch (e) {
+        Object.assign(res, { status: "done", output: previous });
+        setEmp(step.employeeId, "idle");
+        throw e;
+      }
+    }
+    setTask(task, { status: "collecting" });
+    setEmp(MANAGER.id, "collecting", "Raporu güncelliyor", task.id);
+    const previousReport = task.report || "";
+    let lastPaint = 0;
+    try {
+      const rep = await be.complete(reportFixPrompt(task, previousReport, note, changed), opts(task), (text) => {
         task.report = text;
         const t = Date.now();
-        if (t - lastPaint > 400) { lastPaint = t; renderDetail(); }
-      });
-      setTask(task, { status: "done", report });
-      setEmp(MANAGER.id, "idle", "Raporu teslim etti");
-      log(task, "Yönetici raporu hazır", MANAGER.id);
-      if (state.selectedTask === task.id) { state.tab = "report"; renderDetail(); }
+        if (t - lastPaint > 400) { lastPaint = t; paintStream(task, "reportBody", text); }
+      }, { kind: "report" });
+      setTask(task, { status: "done", report: rep.text });
+      log(task, "Rapor güncellendi", MANAGER.id);
     } catch (e) {
-      const msg = errText(e);
-      setTask(task, { status: "failed", error: msg });
-      setEmp(MANAGER.id, "idle", "Görev başarısız");
-      log(task, `Görev başarısız: ${msg}`, MANAGER.id);
-      for (const id of Object.keys(state.states)) if (state.states[id].taskId === taskId && state.states[id].status !== "idle") setEmp(id, "idle");
-    } finally {
-      activeLocal.delete(taskId);
-      renderDetail();
+      task.report = previousReport;
+      setEmp(MANAGER.id, "idle");
+      throw e;
     }
+    setEmp(MANAGER.id, "idle", "Raporu teslim etti");
   }
 
   // Uzun süre boşta kalanlar yatakhaneye geçer (görsel tat)
@@ -711,87 +1027,214 @@ Ekip çıktılarının tamamını kopyalama; iş sahibinin karar vermesi için g
   /* ============ PANEL ============ */
   const md = (text) => {
     if (!text) return "";
-    try {
-      if (window.marked && window.DOMPurify) return DOMPurify.sanitize(marked.parse(text, { async: false }));
-    } catch { /* düş */ }
+    try { if (window.marked && window.DOMPurify) return DOMPurify.sanitize(marked.parse(text, { async: false })); } catch { /* düş */ }
     return `<pre style="white-space:pre-wrap">${esc(text)}</pre>`;
   };
   const sortedTasks = () => [...state.tasks.values()].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+  const currentTask = () => state.tasks.get(state.selectedTask) || sortedTasks()[0] || null;
+
+  function paintStream(task, elId, text) {
+    if (state.selectedTask !== task.id) return;
+    const el = document.getElementById(elId);
+    if (el) { el.innerHTML = md(text); el.classList.add("stream"); }
+  }
 
   function renderTasks() {
-    const list = sortedTasks();
-    $("tasksEmpty").hidden = list.length > 0;
-    $("taskList").innerHTML = list.map((t) => `<li class="${t.id === state.selectedTask ? "active" : ""}" data-task="${t.id}"><span class="status ${t.status}">${TASK_LABEL[t.status] || t.status}</span><span class="title">${esc(t.title)}</span><span class="time">${t.createdAt ? fmtTime(t.createdAt) : ""}</span></li>`).join("");
-    $("statOpen").textContent = list.filter((t) => !["done", "failed"].includes(t.status)).length + " açık görev";
+    const all = sortedTasks();
+    $("tasksEmpty").hidden = all.length > 0;
+    $("taskList").innerHTML = all.map((t) => `<li class="${t.id === state.selectedTask ? "active" : ""}" data-task="${t.id}"><span class="status ${t.status}">${TASK_LABEL[t.status] || t.status}</span><span class="title">${esc(t.title)}</span><span class="time">${t.createdAt ? fmtTime(t.createdAt) : ""}</span></li>`).join("");
+    $("statOpen").textContent = all.filter((t) => !FINAL.includes(t.status)).length + " açık iş";
     renderDetail();
   }
 
-  function renderDetail() {
-    const el = $("detail");
-    const t = state.tasks.get(state.selectedTask) || sortedTasks()[0];
-    if (!t) { el.hidden = true; return; }
-    if (state.selectedTask !== t.id) { state.selectedTask = t.id; }
-    el.hidden = false;
-    const tab = state.tab;
-    const streaming = !["done", "failed"].includes(t.status);
-    let body = "";
-    if (tab === "plan") {
-      body += t.plan ? `<p class="note">${esc(t.plan.summary)}</p>` : `<div class="note">Genel Müdür planı hazırlıyor…</div>`;
-      for (const s of t.plan ? t.plan.steps : []) {
-        const r = (t.results || []).find((x) => x.stepId === s.id) || { status: "pending" };
-        const lbl = { running: "çalışıyor", done: "bitti", failed: "hata" }[r.status] || "bekliyor";
-        body += `<details class="step ${r.status}" ${r.status === "running" ? "open" : ""}><summary><span class="phase">F${s.phase}</span><span class="who">${esc(EMP[s.employeeId]?.name || s.employeeId)}</span><span class="what">${esc(s.title)}</span><span class="pill ${r.status}">${lbl}</span></summary><div class="instruction"><b>Talimat:</b> ${esc(s.instruction)}</div>${r.output ? `<div class="md ${r.status === "running" ? "stream" : ""}">${md(r.output)}</div>` : ""}</details>`;
-      }
-    } else if (tab === "log") {
-      body += `<ul class="log">${(t.log || []).map((l) => `<li><span class="time">${new Date(l.at).toLocaleTimeString("tr-TR")}</span>${l.employeeId ? `<span class="who">${esc(EMP[l.employeeId]?.name || "")}</span>` : ""}<span>${esc(l.message)}</span></li>`).join("")}</ul>`;
-    } else {
-      if (t.error) body += `<div class="error">${esc(t.error)}</div>`;
-      body += `<div class="md report ${t.status === "collecting" ? "stream" : ""}">${md(t.report)}</div>`;
+  const mark = (ok) => (ok === true ? '<span class="mark-ok">✓</span>' : ok === false ? '<span class="mark-bad">✗</span>' : '<span class="mark-q">•</span>');
+  const fmtSize = (n) => (n < 1024 ? n + " B" : (n / 1024).toFixed(1) + " KB");
+
+  function specHtml(t) {
+    const sp = t.spec || {}, pl = t.plan || {};
+    const row = (k, v, proposed) => (v ? `<dt>${k}</dt><dd>${esc(v)}${proposed ? ' <span class="warnline">(öneri)</span>' : ""}</dd>` : "");
+    const acc = pl.acceptance && pl.acceptance.length ? pl.acceptance.join("\n") : sp.acceptance;
+    return `<dl class="spec">${row("Kim için", sp.audience || pl.audience, !sp.audience && !!pl.audience)}${row("Malzeme", sp.material ? (sp.material.length > 220 ? sp.material.slice(0, 220) + "…" : sp.material) : "")}${row("Teslim biçimi", sp.format || pl.format, !sp.format && !!pl.format)}${row("Kabul ölçütü", acc, !sp.acceptance && !!acc)}</dl>`;
+  }
+
+  function planTab(t) {
+    let h = "";
+    if (!t.plan) return `<div class="note">Genel Müdür planı hazırlıyor…</div>`;
+    h += `<p class="note">${esc(t.plan.summary)}</p>`;
+    for (const s of t.plan.steps) {
+      const r = (t.results || []).find((x) => x.stepId === s.id) || { status: "pending" };
+      const lbl = { running: "çalışıyor", done: r.revised ? "düzeltildi" : "teslim", failed: "hata" }[r.status] || "bekliyor";
+      const key = t.id + ":" + s.id, open = r.status === "running" || ui.open.has(key);
+      h += `<details class="step ${r.status}" data-key="${key}" ${open ? "open" : ""}><summary><span class="phase">F${s.phase}</span><span class="who">${esc(EMP[s.employeeId]?.name || s.employeeId)}</span><span class="what">${esc(s.title)}</span><span class="pill ${r.status}">${lbl}</span></summary>
+        <div class="instruction"><b>Teslim:</b> ${esc(s.deliverable || s.title)}<br><b>Hedef:</b> ${esc(s.instruction)}${s.format ? `<br><b>Biçim:</b> ${esc(s.format)}` : ""}${s.acceptance && s.acceptance.length ? `<br><b>Kabul ölçütü:</b> ${esc(s.acceptance.join("; "))}` : ""}</div>
+        ${r.status !== "pending" ? `<div class="md ${r.status === "running" ? "stream" : ""}" id="out-${s.id}">${md(r.output)}</div>` : ""}</details>`;
     }
-    const canRetry = ["done", "failed"].includes(t.status);
-    el.innerHTML = `<div class="head"><h3>${esc(t.title)}</h3><span class="status ${t.status}">${TASK_LABEL[t.status] || t.status}</span></div>
-      <p class="brief">${esc(t.brief)}</p>
-      <div class="tabs"><button data-tab="plan" class="${tab === "plan" ? "on" : ""}">Plan${t.plan ? ` (${t.plan.steps.length})` : ""}</button><button data-tab="log" class="${tab === "log" ? "on" : ""}">Akış (${(t.log || []).length})</button><button data-tab="report" class="${tab === "report" ? "on" : ""}" ${t.report || t.error ? "" : "disabled"}>Rapor</button></div>
+    if (t.status === "awaiting") {
+      h += `<div class="card"><h4>Plan onayı</h4><div class="note">Yanlış anlaşılma varsa şimdi düzelt; çalışanlar onayından sonra başlar. "(öneri)" yazan brif parçalarını Genel Müdür önerdi.</div>
+        <textarea id="planNote" placeholder="Değişmesini istediğin yeri söyle. Örn: Logo işini Grafik Tasarımcı yapsın, kabul ölçütüne 'tek renk' ekle." style="margin-top:8px;min-height:64px">${esc(ui.planNote)}</textarea>
+        <div class="actions"><button class="primary" data-act="approve">Planı onayla ve başlat</button><button class="ghost" data-act="replan">Planı düzelt</button><button class="ghost" data-act="delete">Vazgeç</button></div></div>`;
+    }
+    return h;
+  }
+
+  function reviewCard(t) {
+    const rv = t.review;
+    if (!rv) return t.status === "checking" ? `<div class="card"><h4>Teslim kontrolü</h4><div class="note">QA teslimleri kabul ölçütüne göre denetliyor…</div></div>` : "";
+    const fixes = rv.fixes && rv.fixes.length ? `<h4 style="margin-top:10px">Kontrolün istediği düzeltmeler</h4><ul>${rv.fixes.map((f) => `<li>${mark(f.applied ? true : null)}<span>${esc(f.note)} <span class="note">(${f.applied ? "uygulandı" : "bekliyor"})</span></span></li>`).join("")}</ul>` : "";
+    return `<div class="card"><h4>Teslim kontrolü · ${rv.passed ? "kabul edilebilir" : "eksik bulundu"}</h4><ul>${rv.checks.map((c) => `<li>${mark(c.ok)}<span><b>${esc(c.criterion)}</b>${c.note ? " · " + esc(c.note) : ""}</span></li>`).join("")}</ul>${fixes}${rv.fixes && rv.fixes.length ? `<div class="note" style="margin-top:8px">Düzeltmelerden sonra ikinci bir kontrol yapılmadı; teslimi kendin de aç.</div>` : ""}</div>`;
+  }
+
+  function filesTab(t) {
+    const files = taskFiles(t);
+    if (!files.length) return `<div class="note">Bu işte dosya teslimi yok. Metin teslimleri Plan ve Rapor sekmelerinde.</div>`;
+    return files.map((f, i) => {
+      const key = t.id + ":" + f.name, open = ui.preview === key;
+      const canPreview = f.ext === "html" || f.ext === "svg";
+      let prev = "";
+      if (open && f.ext === "svg") {
+        const clean = window.DOMPurify ? DOMPurify.sanitize(f.content, { USE_PROFILES: { svg: true, svgFilters: true } }) : "";
+        prev = `<div class="preview"><div class="svgprev"><div class="big">${clean}</div><div><div class="small">${clean}</div><div class="cap">32 px</div></div></div></div>`;
+      } else if (open && f.ext === "html") {
+        prev = `<div class="preview"><iframe sandbox="allow-scripts" title="${esc(f.name)} önizleme" data-file="${i}"></iframe></div><div class="note" style="margin-top:6px">Önizleme boş kalırsa dosyayı indirip tarayıcıda aç.</div>`;
+      }
+      return `<div class="file"><div class="row"><div><div class="name">${esc(f.name)}</div><div class="meta">${esc(EMP[f.by]?.name || "")} · ${fmtSize(new Blob([f.content]).size)}</div></div>
+        <div class="actions" style="margin:0">${canPreview ? `<button class="ghost" data-file-act="preview" data-file="${i}">${open ? "Kapat" : "Önizle"}</button>` : ""}${downloads ? `<button class="ghost" data-file-act="save" data-file="${i}">İndir</button>` : ""}<button class="ghost" data-file-act="copy" data-file="${i}">Kopyala</button></div></div>${prev}</div>`;
+    }).join("");
+  }
+
+  function reportTab(t) {
+    let h = "";
+    if (t.error) h += `<div class="error" style="margin-bottom:10px">${esc(t.error)}</div>`;
+    h += reviewCard(t);
+    h += `<div class="md report ${t.status === "collecting" ? "stream" : ""}" id="reportBody">${md(t.report)}</div>`;
+    if (t.status === "done" && t.plan) {
+      h += `<div class="card" style="margin-top:12px"><h4>Düzeltme iste</h4><div class="note">Beğenmediğin yeri söyle; baştan yazılmaz, yalnızca orası değişir.</div>
+        <div class="row" style="margin-top:8px"><label class="tier">Nerede
+          <select id="fixTarget"><option value="report">Rapor</option>${t.plan.steps.map((s) => `<option value="${s.id}" ${ui.fixTarget === s.id ? "selected" : ""}>${esc(EMP[s.employeeId].name)} · ${esc(s.title.slice(0, 40))}</option>`).join("")}</select></label></div>
+        <textarea id="fixNote" placeholder="Örn: Başlık küçük kalmış, ikinci bölüm uzun." style="margin-top:8px;min-height:64px">${esc(ui.fixNote)}</textarea>
+        <div class="actions"><button class="primary" data-act="fix">Sadece bunu düzelt</button></div></div>`;
+    }
+    return h;
+  }
+
+  function renderDetail(force) {
+    const el = $("detail");
+    const t = currentTask();
+    if (!t) { el.hidden = true; ui.lastHtml = ""; return; }
+    if (state.selectedTask !== t.id) state.selectedTask = t.id;
+    el.hidden = false;
+    const tab = state.tab, nFiles = taskFiles(t).length;
+    const body = tab === "plan" ? planTab(t) : tab === "log" ? `<ul class="log">${(t.log || []).map((l) => `<li><span class="time">${new Date(l.at).toLocaleTimeString("tr-TR")}</span>${l.employeeId ? `<span class="who">${esc(EMP[l.employeeId]?.name || "")}</span>` : ""}<span>${esc(l.message)}</span></li>`).join("")}</ul>` : tab === "files" ? filesTab(t) : reportTab(t);
+    const canRetry = FINAL.includes(t.status);
+    const html = `<div class="head"><h3>${esc(t.title)}</h3><span class="status ${t.status}">${TASK_LABEL[t.status] || t.status}</span></div>
+      ${specHtml(t)}
+      <div class="note">Model: ${esc(DEPTH[t.depth || "teslim"].label)}${t.modelNote ? " · " + esc(t.modelNote) : ""}</div>
+      <div class="tabs"><button data-tab="plan" class="${tab === "plan" ? "on" : ""}">Plan${t.plan ? ` (${t.plan.steps.length})` : ""}</button><button data-tab="log" class="${tab === "log" ? "on" : ""}">Akış</button><button data-tab="files" class="${tab === "files" ? "on" : ""}">Teslimler${nFiles ? ` (${nFiles})` : ""}</button><button data-tab="report" class="${tab === "report" ? "on" : ""}" ${t.report || t.error || t.review || ["checking", "collecting"].includes(t.status) ? "" : "disabled"}>Rapor</button></div>
       <div id="tabBody">${body}</div>
       ${canRetry ? `<div class="actions"><button class="ghost" data-act="retry">Yeniden çalıştır</button><button class="ghost" data-act="delete">Sil</button></div>` : ""}`;
-    el.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { state.tab = b.dataset.tab; renderDetail(); }));
-    el.querySelectorAll("[data-act]").forEach((b) => (b.onclick = () => {
-      if (b.dataset.act === "delete") { b.textContent = "Siliniyor…"; removeTask(t.id); }
-      else createTask(t.title, t.brief, t.tier);
-    }));
-    void streaming;
+    if (!force && html === ui.lastHtml) return;
+    ui.lastHtml = html;
+    el.innerHTML = html;
+    // önizleme çerçevesini doldur
+    const fr = el.querySelector("iframe[data-file]");
+    if (fr) { const f = taskFiles(t)[+fr.dataset.file]; if (f) fr.srcdoc = f.content; }
   }
+
+  // Panel olayları (tek yerden)
+  $("detail").addEventListener("click", async (ev) => {
+    const t = currentTask();
+    if (!t) return;
+    const tabBtn = ev.target.closest("[data-tab]");
+    if (tabBtn && !tabBtn.disabled) { state.tab = tabBtn.dataset.tab; renderDetail(true); return; }
+    const fa = ev.target.closest("[data-file-act]");
+    if (fa) {
+      const f = taskFiles(t)[+fa.dataset.file];
+      if (!f) return;
+      const act = fa.dataset.fileAct;
+      if (act === "preview") { const key = t.id + ":" + f.name; ui.preview = ui.preview === key ? null : key; renderDetail(true); }
+      else if (act === "copy") {
+        try { await navigator.clipboard.writeText(f.content); fa.textContent = "Kopyalandı"; }
+        catch { fa.textContent = "Kopyalanamadı"; }
+        setTimeout(() => { fa.textContent = "Kopyala"; }, 1500);
+      } else if (act === "save" && downloads) {
+        fa.disabled = true;
+        try { await downloads.save({ filename: f.name, data: f.content }); fa.textContent = "İndirildi"; }
+        catch (e) { fa.textContent = e && e.code === "declined" ? "Vazgeçildi" : "İndirilemedi"; }
+        setTimeout(() => { fa.textContent = "İndir"; fa.disabled = false; }, 1800);
+      }
+      return;
+    }
+    const a = ev.target.closest("[data-act]");
+    if (!a) return;
+    const act = a.dataset.act;
+    if (act === "delete") { a.textContent = "Siliniyor…"; removeTask(t.id); }
+    else if (act === "retry") submitTask({ title: t.title, spec: t.spec, depth: t.depth, planFirst: t.planFirst });
+    else if (act === "approve" && t.status === "awaiting") { ui.planNote = ""; setTask(t, { status: "queued" }); log(t, "Plan onaylandı", MANAGER.id); enqueue({ id: t.id, stage: "exec" }); }
+    else if (act === "replan" && t.status === "awaiting") {
+      const note = ui.planNote.trim();
+      if (!note) { const n = $("planNote"); if (n) { n.focus(); n.placeholder = "Önce neyin değişeceğini yaz."; } return; }
+      ui.planNote = ""; setTask(t, { status: "queued" }); enqueue({ id: t.id, stage: "plan", note });
+    } else if (act === "fix" && t.status === "done") {
+      const note = ui.fixNote.trim();
+      if (!note) { const n = $("fixNote"); if (n) { n.focus(); n.placeholder = "Önce neyin değişeceğini yaz."; } return; }
+      const target = ui.fixTarget; ui.fixNote = "";
+      state.tab = target === "report" ? "report" : "plan";
+      if (target !== "report") ui.open.add(t.id + ":" + target);
+      setTask(t, { status: "queued" }); enqueue({ id: t.id, stage: "fix", target, note });
+    }
+  });
+  $("detail").addEventListener("input", (ev) => {
+    if (ev.target.id === "planNote") ui.planNote = ev.target.value;
+    if (ev.target.id === "fixNote") ui.fixNote = ev.target.value;
+    if (ev.target.id === "fixTarget") ui.fixTarget = ev.target.value;
+  });
+  $("detail").addEventListener("toggle", (ev) => {
+    const d = ev.target;
+    if (d && d.dataset && d.dataset.key) { if (d.open) ui.open.add(d.dataset.key); else ui.open.delete(d.dataset.key); }
+  }, true);
 
   function render() { renderOffice(); renderTasks(); renderEmpCard(); }
 
-  /* ============ GÖREV OLUŞTURMA ============ */
-  function createTask(title, brief, tier) {
-    const task = { id: uid(), title, brief, status: "queued", createdAt: now(), updatedAt: now(), tier: tier || $("tier").value, results: [], log: [], plan: null, report: null, error: null };
+  /* ============ İŞ OLUŞTURMA ============ */
+  function submitTask({ title, spec, depth, planFirst }) {
+    const task = { id: uid(), title, spec: { ...spec }, depth: depth || "teslim", planFirst: !!planFirst, status: "queued", createdAt: now(), updatedAt: now(), results: [], log: [], fixes: [], plan: null, review: null, report: null, error: null };
     state.tasks.set(task.id, task);
-    state.selectedTask = task.id; state.tab = "plan";
+    state.selectedTask = task.id; state.tab = "plan"; ui.fixTarget = "report";
     persist(task); renderTasks();
-    enqueue(task);
+    enqueue({ id: task.id, stage: "plan" });
     return task;
   }
 
-  $("examples").innerHTML = EXAMPLES.map((ex, i) => `<button type="button" class="chip" data-ex="${i}">${esc(ex.title)}</button>`).join("");
-  $("examples").querySelectorAll("[data-ex]").forEach((b) => (b.onclick = () => { const ex = EXAMPLES[+b.dataset.ex]; $("title").value = ex.title; $("brief").value = ex.brief; }));
+  $("templates").innerHTML = TEMPLATES.map((t, i) => `<button type="button" class="chip" data-tpl="${i}">${esc(t.name)}</button>`).join("");
+  $("templates").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-tpl]");
+    if (!b) return;
+    const t = TEMPLATES[+b.dataset.tpl];
+    $("title").value = t.title; $("audience").value = t.audience; $("material").value = t.material; $("format").value = t.format; $("acceptance").value = t.acceptance;
+    $("formError").hidden = true;
+    $("title").focus();
+  });
   $("newTask").addEventListener("submit", (ev) => {
     ev.preventDefault();
-    const title = $("title").value.trim(), brief = $("brief").value.trim();
+    const v = (id) => $(id).value.trim();
+    const title = v("title"), spec = { audience: v("audience"), material: v("material"), format: v("format"), acceptance: v("acceptance") };
     const err = $("formError");
-    if (!title || !brief) { err.hidden = false; err.textContent = "Başlık ve açıklama gerekli."; return; }
-    if (brief.length > 20000) { err.hidden = false; err.textContent = "Açıklama çok uzun."; return; }
+    const fail = (msg) => { err.hidden = false; err.textContent = msg; };
+    if (!title) return fail("İşi tek cümleyle yaz: ne teslim edilecek?");
+    const all = [title, spec.audience, spec.material, spec.format, spec.acceptance].join("\n");
+    if (/\[[^\]\n]{2,}\]/.test(all)) return fail("Köşeli parantezli yerleri kendi işinle doldur; doldurmazsan sonuç da sıradan çıkar.");
+    if (all.length > 60000) return fail("Malzeme çok uzun. En gerekli kısmı bırak.");
     err.hidden = true;
-    createTask(title, brief);
-    $("title").value = ""; $("brief").value = "";
+    submitTask({ title, spec, depth: $("depth").value, planFirst: $("planFirst").checked });
+    for (const id of ["title", "audience", "material", "format", "acceptance"]) $(id).value = "";
   });
   $("taskList").addEventListener("click", (ev) => {
     const li = ev.target.closest("[data-task]");
     if (!li) return;
     state.selectedTask = li.dataset.task;
     const t = state.tasks.get(li.dataset.task);
-    state.tab = t && t.report ? "report" : "plan";
+    state.tab = t && t.status === "done" ? (taskFiles(t).length ? "files" : "report") : "plan";
+    ui.preview = null; ui.fixTarget = "report";
     renderTasks();
   });
   $("office").addEventListener("click", (ev) => {
@@ -808,7 +1251,7 @@ Ekip çıktılarının tamamını kopyalama; iş sahibinin karar vermesi için g
     b.className = "badge " + mode;
     b.textContent = mode === "live" ? "CANLI · Claude" : mode === "mock" ? "SİMÜLASYON" : "Bağlanıyor…";
     $("costNote").textContent = mode === "live"
-      ? "Her görev kendi Claude kullanım hakkından harcanır: 1 plan + çalışan sayısı kadar çalışma + 1 rapor çağrısı. İlk görevde Claude'a izin istenir."
+      ? "Her iş kendi Claude hakkından harcar: plan, her çalışan için bir çağrı, teslim kontrolü, gerekirse bir düzeltme turu ve rapor. Soru ve küçük düzeltmede Opus 5.5'i seç; hakkın asıl işe kalsın."
       : mode === "mock" ? "Claude bağlantısı yok; çalışanlar simüle ediliyor. Sayfayı Claude içinde açınca gerçek ekip devreye girer." : "";
   }
 
@@ -819,20 +1262,19 @@ Ekip çıktılarının tamamını kopyalama; iş sahibinin karar vermesi için g
   (async () => {
     const cap = window.claude && typeof window.claude.use === "function" ? window.claude : null;
     if (!cap) { setMode("mock"); loadLocal(); return; }
-    const [s, d] = await Promise.all([cap.use("sample").catch(() => null), cap.use("db").catch(() => null)]);
-    sample = s;
+    const [s, d, dl] = await Promise.all([cap.use("sample").catch(() => null), cap.use("db").catch(() => null), cap.use("downloads").catch(() => null)]);
+    sample = s; downloads = dl;
     setMode(sample ? "live" : "mock");
     if (d) {
       db = d;
       let settled = false;
       const timer = setTimeout(() => { if (!settled) loadLocal(); }, 10000);
       try {
-        db.collection("tasks").orderBy("createdAt", "desc").limit(50).onSnapshot((snap) => {
+        db.collection("tasks").orderBy("createdAt", "desc").limit(30).onSnapshot((snap) => {
           settled = true; clearTimeout(timer);
           ingestStored(snap.docs.map((x) => x.data()));
-          // silinenleri düşür
           const ids = new Set(snap.docs.map((x) => x.id));
-          for (const id of [...state.tasks.keys()]) if (!ids.has(id) && !activeLocal.has(id)) state.tasks.delete(id);
+          for (const id of [...state.tasks.keys()]) if (!ids.has(id) && !activeLocal.has(id) && !snap.metadata.hasPendingWrites) state.tasks.delete(id);
           renderTasks();
         }, (e) => { console.warn("db dinleyici hatası", e); settled = true; clearTimeout(timer); loadLocal(); });
       } catch (e) { console.warn(e); loadLocal(); }

@@ -1,24 +1,41 @@
 # Rebirth Ofis
 
-Yapay zeka çalışanlarından oluşan sanal bir **yazılım ofisi**. İzometrik bir ofis planında departmanlar ve masalarının başında çalışan ajanlar görünür; sen bir iş verirsin, **Genel Müdür** işi adımlara böler, doğru çalışanlara dağıtır, ekip çalışır ve sonunda tek bir yönetici raporu teslim edilir.
+Yapay zeka çalışanlarından oluşan sanal bir **yazılım ofisi**. İzometrik bir ofis planında departmanlar ve masalarının başında çalışan ajanlar görünür. Sen işi beş parçalı bir brifle verirsin; **Genel Müdür** planlar, sen planı onaylarsın, ekip çalışır, **QA** teslimi kabul ölçütüne göre denetler ve sonunda açıp indirebileceğin dosyalarla birlikte dürüst bir teslim raporu gelir.
 
-Her çalışan bir Claude ajanıdır (varsayılan model `claude-opus-5-5`). API anahtarı tanımlı değilse ofis **simülasyon modunda** açılır ve akışı sahte çalışanlarla izleyebilirsin.
+Her çalışan bir Claude ajanıdır. API anahtarı tanımlı değilse ofis **simülasyon modunda** açılır ve akışı sahte çalışanlarla izleyebilirsin.
+
+## Çalışma biçimi
+
+Ofis, modele "gerçek iş" teslim ettirmenin bilinen alışkanlıklarını akışın içine gömer:
+
+| Alışkanlık | Ofiste karşılığı |
+|---|---|
+| Beş parçalı brif | Form: iş, kim için, malzeme, teslim biçimi, kabul ölçütü. Boş bıraktığını Genel Müdür önerir ve plan onayında "(öneri)" diye gösterir. |
+| Önce planı gör | Plan hazır olunca iş "Plan onayı bekliyor" durumunda durur. Onaylar ya da notla düzelttirirsin. |
+| Hedefi ver, adımı değil | Genel Müdür çalışana adım adım komut vermez; teslimi, bağlamı, biçimi ve kabul ölçütünü verir. |
+| Bitirince kendin kontrol et | Her çalışan teslimini "Kendi kontrolüm" bölümüyle bitirir; ardından QA dört yerden bakar: kalite, eksik teslim, bozuk dosya, tutarsızlık. Gerekirse tek düzeltme turu yapılır. |
+| Kurgucuya söyler gibi düzelt | "Düzeltme iste": raporu ya da tek bir çalışanın teslimini seçip not yazarsın; yalnızca orası değişir. |
+| Her işte büyük modeli kullanma | Küçük iş Opus 5.5, teslimlik iş Fable 5.2 (medium), uzun iş Fable 5.2 (high). |
+
+Formun üstündeki on hazır iş türü (logo, sunum, web sitesi, animasyon, veri analizi, belgeden tabloya, çeviri, pazar araştırması, oyun, afiş) brifi köşeli parantezlerle doldurur; parantezleri kendi işinle doldurmadan gönderilmez.
+
+Çalışanların internet erişimi yoktur. Güncel veri gerektiren yerde uydurmak yerine "doğrulanmadı" diye işaretlemeleri istenir.
 
 ## Kadro
 
 | Departman | Çalışanlar |
 |---|---|
-| Yönetim | Genel Müdür (planlar ve raporu toplar), Proje Yöneticisi |
+| Yönetim | Genel Müdür (planlar ve raporlar), Proje Yöneticisi |
 | Ürün ve Tasarım | Ürün Analisti, UI/UX Tasarımcı |
-| Yazılım Geliştirme | Backend, Frontend, Mobil Geliştirici |
-| Kalite ve Güvenlik | QA Test Mühendisi, Güvenlik Analisti |
-| DevOps ve Altyapı | DevOps Mühendisi, Veri Mühendisi |
-| Pazarlama ve Müşteri | İçerik Yazarı, Müşteri Temsilcisi |
+| Yazılım Geliştirme | Backend, Frontend (tek dosyalık site, oyun, animasyon), Mobil Geliştirici |
+| Kalite ve Güvenlik | QA Test Mühendisi (teslim kontrolü), Güvenlik Analisti |
+| DevOps ve Veri | DevOps Mühendisi, Veri Analisti |
+| Pazarlama ve Müşteri | İçerik Yazarı (metin, çeviri), Grafik Tasarımcı (logo, afiş), Müşteri Temsilcisi |
 | Finans | Muhasebeci |
-| Yedek | Yedek Çalışan (hiçbir role uymayan işler) |
+| Yedek | Yedek Çalışan |
 | Dinlenme Alanı | Uzun süre boşta kalanlar burada dinlenir |
 
-Kadro ve her çalışanın sistem istemi `packages/shared/src/roster.ts` dosyasındadır. Yeni bir çalışan eklemek için bu listeye bir kayıt eklemen yeterli; ofis planı ve planlayıcı otomatik olarak tanır.
+Kadro, iş şablonları ve istemler `packages/shared/src` altındadır (`roster.ts`, `prompts.ts`). Yeni bir çalışan eklemek için `roster.ts` listesine bir kayıt eklemen yeterli.
 
 ## Kurulum
 
@@ -37,7 +54,7 @@ npm run dev:mock
 Arayüz olmadan terminalden tek görev çalıştırmak için:
 
 ```bash
-npm run demo -- "Berber randevu uygulaması" "Online randevu, SMS hatırlatma, ödeme; güvenlik ve test planı da olsun."
+npm run demo -- "Berberim için tek sayfalık randevu sitesi" "Mahalledeki müşteriler" "Tek HTML dosyası" "Telefonda taşan yer yok"
 ```
 
 ### Üretim
@@ -47,28 +64,30 @@ npm run build   # web arayüzünü derler (apps/web/dist)
 npm start       # tek sunucu: API + arayüz, http://localhost:8787
 ```
 
-## Nasıl çalışır
+## Akış
 
 ```
-İş  ──▶  Genel Müdür (plan, JSON)  ──▶  Faz 1: çalışanlar paralel  ──▶  Faz 2 ...  ──▶  Genel Müdür (rapor)
+Brif ─▶ Genel Müdür (plan) ─▶ Plan onayı ─▶ Fazlar (paralel çalışanlar + öz kontrol)
+     ─▶ QA teslim kontrolü ─▶ tek düzeltme turu ─▶ Teslim raporu ─▶ noktasal düzeltme
 ```
 
-1. **Planlama**: Genel Müdür, kadro listesini görerek işi en fazla 8 adıma böler. Her adımın bir çalışanı ve bir fazı vardır. Çıktı yapılandırılmış JSON olarak alınır (`output_config.format`).
-2. **Çalışma**: Aynı fazdaki adımlar paralel çalışır; sonraki fazdakiler önceki çıktıları görür. Her çalışan kendi rol istemiyle çağrılır.
-3. **Rapor**: Genel Müdür tüm çıktıları uzlaştırıp özet, teslimatlar, riskler ve sonraki adımlardan oluşan raporu yazar.
+Plan ve teslim kontrolü yapılandırılmış JSON olarak alınır (`output_config.format`). Çalışan çıktısındaki `Dosya: ad.uzanti` satırı ve onu izleyen kod bloğu teslim dosyası sayılır; arayüzde "Teslimler" sekmesinde önizlenir (HTML yalıtılmış çerçevede, SVG 32 piksel görünümüyle birlikte), indirilir ve kopyalanır. Yarım kalmış kod bloğu, kapanmayan HTML ya da dışarıdan kaynak yükleyen dosya gibi belirtiler model çağrılmadan yakalanıp QA'ya bulgu olarak verilir.
 
-Tüm durum değişiklikleri SSE (`/api/events`) ile arayüze anında akar; ofiste çalışanların baloncukları ("Görevi planlıyor", "Sonucu topluyor" gibi) bu olaylardan beslenir. Görevler `data/office.json` dosyasına yazılır.
+Tüm durum değişiklikleri SSE (`/api/events`) ile arayüze akar. İşler `data/office.json` dosyasına yazılır; plan onayı bekleyen iş sunucu yeniden başlasa da kaldığı yerden sürer.
 
-Model çağrılarında adaptive thinking, prompt caching (sistem istemi) ve sunucu taraflı refusal fallback (`fallbacks: "default"`) açıktır.
+Model çağrılarında adaptive thinking, sistem istemi için prompt caching ve sunucu taraflı refusal fallback (`fallbacks: "default"`) açıktır.
 
 ## API
 
 | Yöntem | Yol | Açıklama |
 |---|---|---|
-| GET | `/api/office` | Departmanlar, çalışanlar, durumlar ve görevler |
-| GET | `/api/tasks` | Görev listesi |
-| GET | `/api/tasks/:id` | Görev ayrıntısı (plan, adım çıktıları, rapor, akış) |
-| POST | `/api/tasks` | `{ "title": "...", "brief": "..." }` ile yeni görev |
+| GET | `/api/office` | Departmanlar, çalışanlar, durumlar ve işler |
+| GET | `/api/tasks`, `/api/tasks/:id` | İş listesi ve ayrıntısı |
+| POST | `/api/tasks` | `{ title, audience, material, format, acceptance, depth, planFirst }` |
+| POST | `/api/tasks/:id/approve` | Planı onayla, çalışanları başlat |
+| POST | `/api/tasks/:id/replan` | `{ note }` ile planı noktasal düzelt |
+| POST | `/api/tasks/:id/fix` | `{ target: "report" \| adımKimliği, note }` ile noktasal düzeltme |
+| DELETE | `/api/tasks/:id` | İşi sil |
 | GET | `/api/events` | SSE canlı olay akışı |
 
 ## Ortam değişkenleri
@@ -76,16 +95,17 @@ Model çağrılarında adaptive thinking, prompt caching (sistem istemi) ve sunu
 | Değişken | Varsayılan | Açıklama |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | - | Yoksa simülasyon modu |
-| `OFFICE_MODEL` | `claude-opus-5-5` | Çalışanların modeli |
+| `OFFICE_MODEL` | `claude-fable-5-2` | Teslimlik ve uzun işlerin modeli |
+| `OFFICE_LIGHT_MODEL` | `claude-opus-5-5` | Küçük işlerin modeli |
 | `OFFICE_MOCK` | `0` | `1` ise anahtar olsa da simülasyon |
 | `OFFICE_MOCK_DELAY_MS` | `2500` | Simülasyonda adım süresi |
 | `PORT` | `8787` | Sunucu portu |
-| `OFFICE_DATA_DIR` | `./data` | Görev kayıtlarının yazıldığı klasör |
+| `OFFICE_DATA_DIR` | `./data` | İş kayıtlarının yazıldığı klasör |
 
 ## Proje yapısı
 
 ```
-packages/shared   ortak tipler + kadro (roster)
+packages/shared   ortak tipler, kadro, istemler, teslim dosyası ayıklama
 apps/server       Hono API, orkestratör, Claude entegrasyonu, SSE
 apps/web          Vite + React izometrik ofis arayüzü
 ```
@@ -99,4 +119,4 @@ apps/web          Vite + React izometrik ofis arayüzü
 
 ## Telefondan kullanım (Artifact sürümü)
 
-`artifact/rebirth-ofis.html` tek dosyalık, sunucusuz sürümdür. Claude içinde artifact olarak yayınlandığında çalışanlar Claude'u doğrudan sayfadan çağırır (`sample` yeteneği, kullanıcının kendi Claude hakkından harcanır), görevler artifact veritabanında saklanır (`db`). Claude dışında açılırsa simülasyon moduna düşer.
+`artifact/rebirth-ofis.html` tek dosyalık, sunucusuz sürümdür ve sunucu sürümüyle aynı akışı izler. Claude içinde artifact olarak yayınlandığında çalışanlar Claude'u doğrudan sayfadan çağırır (`sample` yeteneği, kullanıcının kendi Claude hakkından harcanır), görevler artifact veritabanında saklanır (`db`). Claude dışında açılırsa simülasyon moduna düşer.

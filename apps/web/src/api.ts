@@ -1,23 +1,28 @@
-import type { OfficeEvent, OfficeSnapshot, Task } from "@rebirth/shared";
+import type { OfficeEvent, OfficeSnapshot, Task, TaskDepth, TaskSpec } from "@rebirth/shared";
 
-export async function fetchOffice(): Promise<OfficeSnapshot> {
-  const r = await fetch("/api/office");
-  if (!r.ok) throw new Error("Ofis bilgisi alınamadı");
-  return r.json();
-}
-
-export async function createTask(title: string, brief: string): Promise<Task> {
-  const r = await fetch("/api/tasks", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, brief }),
-  });
+async function call<T>(path: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
   if (!r.ok) {
     const body = (await r.json().catch(() => ({}))) as { error?: string };
-    throw new Error(body.error ?? "Görev oluşturulamadı");
+    throw new Error(body.error ?? "İstek başarısız oldu");
   }
-  return r.json();
+  return r.json() as Promise<T>;
 }
+
+export const fetchOffice = () => call<OfficeSnapshot>("/api/office");
+
+export const createTask = (input: { title: string; depth: TaskDepth; planFirst: boolean } & TaskSpec) =>
+  call<Task>("/api/tasks", { method: "POST", body: JSON.stringify(input) });
+
+export const approvePlan = (id: string) => call<Task>(`/api/tasks/${id}/approve`, { method: "POST" });
+
+export const replan = (id: string, note: string) =>
+  call<Task>(`/api/tasks/${id}/replan`, { method: "POST", body: JSON.stringify({ note }) });
+
+export const requestFix = (id: string, target: string, note: string) =>
+  call<Task>(`/api/tasks/${id}/fix`, { method: "POST", body: JSON.stringify({ target, note }) });
+
+export const deleteTask = (id: string) => call<{ ok: boolean }>(`/api/tasks/${id}`, { method: "DELETE" });
 
 /** Sunucudan gelen canlı olay akışına bağlanır. */
 export function subscribe(onEvent: (e: OfficeEvent) => void, onStatus: (ok: boolean) => void): () => void {
@@ -29,7 +34,7 @@ export function subscribe(onEvent: (e: OfficeEvent) => void, onStatus: (ok: bool
       /* yoksay */
     }
   };
-  for (const type of ["snapshot", "employee", "task", "log"]) es.addEventListener(type, handler);
+  for (const type of ["snapshot", "employee", "task", "task_deleted", "log"]) es.addEventListener(type, handler);
   es.onopen = () => onStatus(true);
   es.onerror = () => onStatus(false);
   return () => es.close();
